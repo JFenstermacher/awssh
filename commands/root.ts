@@ -16,15 +16,19 @@ export const rootCmd = new Command()
   .option("-p, --port <port:number>", "SSH port", { global: true, default: 22 })
   .option("--profile <profile:string>", "AWS profile", { global: true })
   .option("--region <region:string>", "AWS region", { global: true })
-  .option("--priv", "Use private IP to connect to instance", {
-    conflicts: ["pub", "ssm"],
-    global: true,
-  })
-  .option("--pub", "Use public IP to connect to instance", {
+  .option(
+    "--priv",
+    "Filters instances and use private IP to connect",
+    {
+      conflicts: ["pub", "ssm"],
+      global: true,
+    },
+  )
+  .option("--pub", "Filters instances and uses public IP to connect", {
     conflicts: ["priv", "ssm"],
     global: true,
   })
-  .option("--ssm", "Use SSM to connect", {
+  .option("--ssm", "Filters instances and use SSM to connect", {
     conflicts: ["priv", "pub"],
     global: true,
   });

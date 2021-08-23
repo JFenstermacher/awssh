@@ -1,6 +1,8 @@
-import { rootCmd } from "./commands/root.ts";
+// import { rootCmd } from "./commands/root.ts";
 
-const { options } = await rootCmd
-  .parse(Deno.args);
+console.log(Deno.args[0]);
 
-console.log(options);
+// const { options } = await rootCmd
+//   .parse(Deno.args);
+
+// console.log(options);
