@@ -11,6 +11,4 @@ export const readYamlSafe = async (path: string) =>
 export const writeYaml = async (
   path: string,
   data: Record<string, unknown>,
-) => {
-  await Deno.writeTextFile(path, stringify(data));
-};
+): Promise<void> => Deno.writeTextFile(path, stringify(data));
