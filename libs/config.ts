@@ -1,10 +1,10 @@
-import { join } from "https://deno.land/std@0.106.0/path/mod.ts";
-import { readYamlSafe, writeYaml } from "../libs/util.ts";
+import { dirname, join } from "https://deno.land/std@0.106.0/path/mod.ts";
+import { getHomeDir, readYamlSafe, writeYaml } from "../libs/util.ts";
 
 type BuildTypes = "darwin" | "linux" | "windows";
 type ConnectionTypes = "pub" | "priv" | "ssm";
 
-type Configuration = {
+export type Configuration = {
   baseCommand: string;
   defaultUser: string;
   keysDirectory: string;
@@ -12,8 +12,7 @@ type Configuration = {
   templateString: string;
 };
 
-const { build, env } = Deno;
-const HOME = env.get("HOME") ?? env.get("USERPROFILE") as string;
+const HOME = getHomeDir();
 
 export const CONFIG_DEFAULTS: Configuration = {
   baseCommand: "ssh",
@@ -23,20 +22,21 @@ export const CONFIG_DEFAULTS: Configuration = {
   templateString: "${InstanceId} [${Tags.Name}]",
 };
 
-export const getConfigPath = (os: BuildTypes) => {
-  const xdgConfigHome = env.get("XDG_CONFIG_HOME");
+export const getConfigPath = () => {
+  const { build, env } = Deno;
+  const home = env.get("XDG_CONFIG_HOME") ?? join(HOME, ".config");
 
   const osMapping: Record<BuildTypes, string[]> = {
-    darwin: [HOME, ".config", "awssh", "config.yaml"],
-    linux: [HOME, ".config", "awssh", "config.yaml"],
+    darwin: [home, "awssh", "config.yaml"],
+    linux: [home, "awssh", "config.yaml"],
     windows: [HOME, "%LOCALAPPDATA", "awssh", "config.yaml"],
   };
 
-  return xdgConfigHome ?? join(...osMapping[os]);
+  return join(...osMapping[build.os]);
 };
 
 export const readConfig = async (path?: string): Promise<Configuration> => {
-  const configPath = path ?? getConfigPath(build.os);
+  const configPath = path ?? getConfigPath();
 
   const config = await readYamlSafe(configPath) as Configuration;
 
@@ -47,7 +47,8 @@ export const writeConfig = async (
   config: Configuration,
   path?: string,
 ): Promise<void> => {
-  const configPath = path ?? getConfigPath(build.os);
+  const configPath = path ?? getConfigPath();
 
+  await Deno.mkdir(dirname(configPath), { recursive: true });
   await writeYaml(configPath, config);
 };

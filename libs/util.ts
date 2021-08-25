@@ -12,3 +12,9 @@ export const writeYaml = async (
   path: string,
   data: Record<string, unknown>,
 ): Promise<void> => Deno.writeTextFile(path, stringify(data));
+
+export const getHomeDir = () => {
+  const { env } = Deno;
+
+  return env.get("HOME") ?? env.get("USERPROFILE") as string;
+};
