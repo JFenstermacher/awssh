@@ -3,7 +3,6 @@ import {
   prompt,
   Select,
 } from "https://deno.land/x/cliffy@v0.19.5/prompt/mod.ts";
-import { lookpath } from "https://raw.githubusercontent.com/otiai10/lookpath/main/src/index.ts";
 import { Configuration, readConfig, writeConfig } from "../libs/config.ts";
 
 type ConfigFunction = (config: Configuration) => Promise<Configuration>;
