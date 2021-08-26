@@ -2,7 +2,7 @@ import { dirname, join } from "https://deno.land/std@0.106.0/path/mod.ts";
 import { getHomeDir, readYamlSafe, writeYaml } from "../libs/util.ts";
 
 type BuildTypes = "darwin" | "linux" | "windows";
-type ConnectionTypes = "pub" | "priv" | "ssm";
+type ConnectionTypes = "public" | "private" | "ssm";
 
 export type Configuration = {
   baseCommand: string;
@@ -18,7 +18,7 @@ export const CONFIG_DEFAULTS: Configuration = {
   baseCommand: "ssh",
   defaultUser: "ec2-user",
   keysDirectory: join(HOME, ".ssh"),
-  connectVia: ["pub", "priv"],
+  connectVia: ["public", "private"],
   templateString: "${InstanceId} [${Tags.Name}]",
 };
 
