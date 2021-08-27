@@ -2,8 +2,8 @@ import { dirname, join } from "https://deno.land/std@0.106.0/path/mod.ts";
 import { getHomeDir, readYamlSafe, writeYaml } from "../libs/util.ts";
 
 type BuildTypes = "darwin" | "linux" | "windows";
-type ConnectionTypes = "public" | "private" | "ssm";
 
+export type ConnectionTypes = "public" | "private" | "ssm";
 export type Configuration = {
   baseCommand: string;
   defaultUser: string;

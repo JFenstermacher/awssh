@@ -18,3 +18,11 @@ export const getHomeDir = () => {
 
   return env.get("HOME") ?? env.get("USERPROFILE") as string;
 };
+
+export const isExecutable = async (cmd: string[]): Promise<boolean> => {
+  const process = Deno.run({ cmd, stdout: "null" });
+
+  const { success } = await process.status();
+
+  return success;
+};

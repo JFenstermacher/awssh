@@ -1,9 +1,15 @@
+import { Command } from "https://deno.land/x/cliffy@v0.19.5/command/mod.ts";
 import {
   Input,
-  prompt,
   Select,
 } from "https://deno.land/x/cliffy@v0.19.5/prompt/mod.ts";
-import { Configuration, readConfig, writeConfig } from "../libs/config.ts";
+import {
+  Configuration,
+  ConnectionTypes,
+  readConfig,
+  writeConfig,
+} from "../libs/config.ts";
+import { isExecutable } from "../libs/util.ts";
 
 type ConfigFunction = (config: Configuration) => Promise<Configuration>;
 type ConfigMapping = {
@@ -69,36 +75,27 @@ export const configTemplate: ConfigFunction = async (config) => {
 };
 
 export const configConnection: ConfigFunction = async (config) => {
-  const ssm = await lookpath("session-manager-plugin");
+  const ssm = await isExecutable(["session-manager-plugin", "--version"]);
 
-  let choices = ["public", "private"];
-  if (ssm) choices.push("ssm");
+  let options = ["public", "private"];
+  if (ssm) options.push("ssm");
 
-  const { first, second } = await prompt([
-    {
-      name: "first",
-      message: "Your first attempt to connecto instances",
-      type: Select,
-      options: choices,
-      after: async ({ first }, next) => {
-        choices = choices.filter((ch) => ch !== first);
-        await next();
-      },
-    },
-    {
-      name: "second",
-      message: "Your second attempt to connecto instances",
-      type: Select,
-      options: choices,
-      before: async (_, next) => next(true),
-      after: async ({ second }, next) => {
-        choices = choices.filter((ch) => ch !== second);
-        await next();
-      },
-    },
-  ]);
+  config.connectVia = [];
+  while (options.length > 1) {
+    const count = config.connectVia.length ? "second" : "first";
+    const choice = await Select.prompt({
+      message: `Your ${count} attempt to connect instances`,
+      options,
+    });
 
-  config.connectVia = [first, second, choices.pop()];
+    config.connectVia.push(choice as ConnectionTypes);
+    options = options.filter((opt) => opt !== choice);
+  }
+
+  config.connectVia.push(options.pop() as ConnectionTypes);
 
   return config;
 };
+
+export const configCmd = new Command()
+  .action(configAction);
