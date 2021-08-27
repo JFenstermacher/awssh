@@ -16,13 +16,13 @@ type ConfigMapping = {
   [key: string]: ConfigFunction;
 };
 
-export const configAction = async () => {
+export const configureAction = async () => {
   let config = await readConfig();
 
   const funcMapping: ConfigMapping = {
-    "Base Command": configBaseCommand,
-    "Connection Priority": configConnection,
-    "Configure Instance List Template": configTemplate,
+    "Base Command": configureBaseCommand,
+    "Connection Priority": configureConnection,
+    "Configure Instance List Template": configureTemplate,
     "Keys Home Directory": configureKeysHome,
   };
 
@@ -38,7 +38,7 @@ export const configAction = async () => {
   }
 };
 
-export const configBaseCommand: ConfigFunction = async (config) => {
+export const configureBaseCommand: ConfigFunction = async (config) => {
   const baseCommand = await Input.prompt({
     message: "What will the base SSH command be",
     default: config.baseCommand,
@@ -52,10 +52,12 @@ export const configBaseCommand: ConfigFunction = async (config) => {
 export const configureKeysHome: ConfigFunction = async (config) => {
   const keysDirectory = await Input.prompt({
     message: "Where are you SSH keys stored",
+    default: config.keysDirectory,
     validate: async (value: string) => {
-      const { isDirectory } = await Deno.stat(value);
+      const { isDirectory } = await Deno.stat(value)
+        .catch(() => ({ isDirectory: false }));
 
-      return isDirectory ?? "Please provide a valid directory";
+      return isDirectory ? true : "Please provide a valid directory";
     },
   });
 
@@ -64,7 +66,7 @@ export const configureKeysHome: ConfigFunction = async (config) => {
   return config;
 };
 
-export const configTemplate: ConfigFunction = async (config) => {
+export const configureTemplate: ConfigFunction = async (config) => {
   const templateString = await Input.prompt({
     message: "Set the instance output string template",
   });
@@ -74,7 +76,7 @@ export const configTemplate: ConfigFunction = async (config) => {
   return config;
 };
 
-export const configConnection: ConfigFunction = async (config) => {
+export const configureConnection: ConfigFunction = async (config) => {
   const ssm = await isExecutable(["session-manager-plugin", "--version"]);
 
   let options = ["public", "private"];
@@ -97,6 +99,6 @@ export const configConnection: ConfigFunction = async (config) => {
   return config;
 };
 
-export const configCmd = new Command()
+export const configureCmd = new Command()
   .description("Configure your SSH and SCP options")
-  .action(configAction);
+  .action(configureAction);

@@ -1,5 +1,5 @@
-import { configCmd, rootCmd } from "./commands/mod.ts";
+import { configureCmd, rootCmd } from "./commands/mod.ts";
 
 rootCmd
-  .command("configure", configCmd)
+  .command("configure", configureCmd)
   .parse(Deno.args);
