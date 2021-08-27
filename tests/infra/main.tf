@@ -4,8 +4,8 @@ terraform {
       source  = "hashicorp/aws"
       version = "3.56.0"
     }
-    tls  = {
-      source = "hashicorp/tls"
+    tls = {
+      source  = "hashicorp/tls"
       version = "~>3.1.0"
     }
   }
@@ -42,8 +42,8 @@ resource "tls_private_key" "ssh" {
 }
 
 resource "local_file" "private_key" {
-  content = tls_private_key.ssh.private_key_pem
-  filename = "${local.prefix}.pem"
+  content         = tls_private_key.ssh.private_key_pem
+  filename        = "${local.prefix}.pem"
   file_permission = "0600"
 }
 
@@ -54,7 +54,7 @@ resource "aws_key_pair" "test" {
 
 resource "aws_security_group" "test" {
   name_prefix = local.prefix
-  vpc_id = data.aws_vpc.default.id
+  vpc_id      = data.aws_vpc.default.id
 
   ingress {
     from_port   = 22
@@ -72,7 +72,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_instance" "test" {
-  count = 1
+  count = 3
 
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t2.micro"
