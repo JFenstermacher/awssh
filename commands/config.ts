@@ -98,4 +98,5 @@ export const configConnection: ConfigFunction = async (config) => {
 };
 
 export const configCmd = new Command()
+  .description("Configure your SSH and SCP options")
   .action(configAction);

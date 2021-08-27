@@ -1,3 +1,5 @@
-import { configAction } from "./commands/config.ts";
+import { configCmd, rootCmd } from "./commands/mod.ts";
 
-await configAction();
+rootCmd
+  .command("configure", configCmd)
+  .parse(Deno.args);

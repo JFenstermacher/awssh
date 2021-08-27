@@ -1,1 +1,1 @@
-console.log("scp");
+export const scpCmd = "scpCmd";
