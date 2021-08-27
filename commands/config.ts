@@ -3,12 +3,8 @@ import {
   Input,
   Select,
 } from "https://deno.land/x/cliffy@v0.19.5/prompt/mod.ts";
-import {
-  Configuration,
-  ConnectionTypes,
-  readConfig,
-  writeConfig,
-} from "../libs/config.ts";
+import { readConfig, writeConfig } from "../libs/config.ts";
+import { Configuration, ConnectionTypes } from "../libs/types.ts";
 import { isExecutable } from "../libs/util.ts";
 
 type ConfigFunction = (config: Configuration) => Promise<Configuration>;

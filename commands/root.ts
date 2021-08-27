@@ -1,4 +1,9 @@
 import { Command } from "https://deno.land/x/cliffy@v0.19.5/command/mod.ts";
+import { SSHOptions } from "../libs/types.ts";
+
+export const sshAction = async (options: SSHOptions) => {
+  console.log(options);
+};
 
 export const rootCmd = new Command()
   .name("awssh")
@@ -19,4 +24,4 @@ export const rootCmd = new Command()
   })
   .option("--ssm", "Filters instances and use SSM to connect", {
     conflicts: ["priv", "pub"],
-  });
+  }).action(sshAction);

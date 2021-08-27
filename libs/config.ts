@@ -1,16 +1,6 @@
 import { dirname, join } from "https://deno.land/std@0.106.0/path/mod.ts";
 import { getHomeDir, readYamlSafe, writeYaml } from "../libs/util.ts";
-
-type BuildTypes = "darwin" | "linux" | "windows";
-
-export type ConnectionTypes = "public" | "private" | "ssm";
-export type Configuration = {
-  baseCommand: string;
-  defaultUser: string;
-  keysDirectory: string;
-  connectVia: ConnectionTypes[];
-  templateString: string;
-};
+import { BuildTypes, Configuration } from "./types.ts";
 
 const HOME = getHomeDir();
 
