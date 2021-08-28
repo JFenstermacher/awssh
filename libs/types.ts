@@ -22,3 +22,26 @@ export type SSHOptions = {
   pub?: boolean;
   ssm?: boolean;
 };
+
+export type ClientParams = {
+  profile?: string;
+  region?: string;
+};
+
+export type FormattedInstance = {
+  ImageId?: string;
+  InstanceId?: string;
+  InstanceType?: string;
+  KeyName?: string;
+  PrivateIpAddress?: string;
+  PublicIpAddress?: string;
+  SubnetId?: string;
+  VpcId?: string;
+  SSMEnabled: boolean;
+  State: string;
+  Tags?: { [key: string]: string };
+};
+
+export type InstanceMap = {
+  [key: string]: FormattedInstance;
+};
