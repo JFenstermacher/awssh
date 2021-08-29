@@ -1,8 +1,21 @@
 import { Command } from "https://deno.land/x/cliffy@v0.19.5/command/mod.ts";
+import {
+  generateInstanceMap,
+  getInstances,
+  promptInstance,
+} from "../libs/instances.ts";
+import { readConfig } from "../libs/config.ts";
 import { SSHOptions } from "../libs/types.ts";
 
 export const sshAction = async (options: SSHOptions) => {
-  console.log(options);
+  const config = await readConfig();
+
+  const instances = await getInstances(config, options);
+  const instanceMap = generateInstanceMap(instances, config, options);
+
+  const instance = await promptInstance(instanceMap);
+
+  if (instance) console.log(instance);
 };
 
 export const rootCmd = new Command()

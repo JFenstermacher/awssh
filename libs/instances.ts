@@ -1,4 +1,4 @@
-import { green, red } from "https://deno.land/std@v0.106.0/fmt/colors.ts";
+import { green, red } from "https://deno.land/std@0.106.0/fmt/colors.ts";
 import { Select } from "https://deno.land/x/cliffy@v0.19.5/prompt/mod.ts";
 import {
   DescribeInstancesCommand,
@@ -122,13 +122,13 @@ export const renderTemplateString = (
   instance: FormattedInstance,
   templateString: string,
 ) => {
-  const regex = /\$\{[^{}]\}/g;
+  const regex = /\$\{([^{}]+)\}/g;
 
   const matches = templateString.matchAll(regex);
 
   // ${InstanceId} ${Tag.Name}
   // To resolve Tag.Name, have to recursively select key
-  const resolveKey = (key: string) => {
+  const resolveKey = (match: string, key: string) => {
     const keys = key.split(".");
 
     let result = instance as any;
@@ -138,14 +138,13 @@ export const renderTemplateString = (
       result = result[k] || {};
     }
 
-    return result as string || key;
+    return typeof result === "object" ? match : result;
   };
 
   let result = templateString;
   for (const [match, key] of matches) {
-    const value = resolveKey(key);
-
-    result = templateString.replace(match, value);
+    const value = resolveKey(match, key);
+    result = result.replace(match, value);
   }
 
   return result;
