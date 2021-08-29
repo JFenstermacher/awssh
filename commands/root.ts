@@ -1,36 +1,17 @@
 import { Command } from "https://deno.land/x/cliffy@v0.19.5/command/mod.ts";
-import {
-  generateInstanceMap,
-  getInstances,
-  promptInstance,
-} from "../libs/instances.ts";
+import { getInstance } from "../libs/instances.ts";
 import { readConfig } from "../libs/config.ts";
-import { Configuration, OfflineCacheModes, SSHOptions } from "../libs/types.ts";
-import { readInstanceCache, writeInstanceCache } from "../libs/cache.ts";
+import { SSHOptions } from "../libs/types.ts";
+import { getKey } from "../libs/keys.ts";
 
 export const sshAction = async (options: SSHOptions) => {
   const config = await readConfig();
 
-  const instances = await getInstances(config, options);
-  writeInstanceCache(instances);
-  const instance = await promptInstance(instances, config, options);
+  const instance = await getInstance(config, options);
+  const cache = await readKeysCache();
+  const key = await getKey(instance, config, options);
 
-  if (instance) console.log(instance);
-};
-
-export const loadInstances = async (
-  config: Configuration,
-  options: SSHOptions,
-) => {
-  const instances = await getInstances(config, options).catch((err) => {
-    console.error("Failed to load instances...");
-
-    if (config.offlineCache === OfflineCacheModes.DISABLED) throw err;
-
-    return readInstanceCache();
-  });
-
-  return instances;
+  console.log(key);
 };
 
 export const rootCmd = new Command()

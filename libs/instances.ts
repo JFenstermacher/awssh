@@ -23,7 +23,7 @@ import {
   OfflineCacheModes,
   SSHOptions,
 } from "./types.ts";
-import { readInstanceCache } from "./cache.ts";
+import { readInstanceCache, writeInstanceCache } from "./cache.ts";
 
 export const getClients = (
   { profile, region }: ClientParams = {},
@@ -103,8 +103,8 @@ export const formatInstance = (
 export const getInstancesWithCache = async (
   config: Configuration,
   options: SSHOptions,
-) =>
-  getInstances(config, options).catch(async (err) => {
+) => {
+  const instances = await getInstances(config, options).catch(async (err) => {
     let instances: FormattedInstance[] = [];
 
     switch (config.offlineCacheMode) {
@@ -140,6 +140,11 @@ export const getInstancesWithCache = async (
 
     return instances;
   });
+
+  writeInstanceCache(instances);
+
+  return instances;
+};
 
 export const getInstances = async (
   config: Configuration,

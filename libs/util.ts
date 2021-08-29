@@ -1,3 +1,4 @@
+import { createHash } from "https://deno.land/std@0.101.0/hash/mod.ts";
 import {
   parse,
   stringify,
@@ -24,10 +25,19 @@ export const getHomeDir = () => {
   return env.get("HOME") ?? env.get("USERPROFILE") as string;
 };
 
-export const isExecutable = async (cmd: string[]): Promise<boolean> => {
+export const isExecutable = async (executable: string): Promise<boolean> => {
+  const cmd = ["which", executable];
   const process = Deno.run({ cmd, stdout: "null" });
 
   const { success } = await process.status();
 
   return success;
+};
+
+export const createFileHash = async (path: string): Promise<string | null> => {
+  const contents = await Deno.readTextFile(path).catch((_) => null);
+
+  const hash = createHash("md5");
+
+  return contents ? hash.update(contents).toString() : null;
 };
