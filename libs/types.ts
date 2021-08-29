@@ -42,6 +42,18 @@ export type FormattedInstance = {
   Tags?: { [key: string]: string };
 };
 
+export enum CacheTypes {
+  Instances = "instances",
+  Keys = "keys",
+}
+
 export type InstanceMap = {
   [key: string]: FormattedInstance;
+};
+
+export type KeyCache = {
+  [instanceId: string]: {
+    keyLocation: string;
+    hash: string;
+  };
 };

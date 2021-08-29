@@ -1,4 +1,4 @@
-import { dirname, join } from "https://deno.land/std@0.106.0/path/mod.ts";
+import { join } from "https://deno.land/std@0.106.0/path/mod.ts";
 import { getHomeDir, readYamlSafe, writeYaml } from "../libs/util.ts";
 import { BuildTypes, Configuration } from "./types.ts";
 
@@ -19,7 +19,7 @@ export const getConfigPath = () => {
   const osMapping: Record<BuildTypes, string[]> = {
     darwin: [home, "awssh", "config.yaml"],
     linux: [home, "awssh", "config.yaml"],
-    windows: [HOME, "%LOCALAPPDATA", "awssh", "config.yaml"],
+    windows: [HOME, "%LOCALAPPDATA%", "awssh", "config.yaml"],
   };
 
   return join(...osMapping[build.os]);
@@ -39,6 +39,5 @@ export const writeConfig = async (
 ): Promise<void> => {
   const configPath = path ?? getConfigPath();
 
-  await Deno.mkdir(dirname(configPath), { recursive: true });
   await writeYaml(configPath, config);
 };
