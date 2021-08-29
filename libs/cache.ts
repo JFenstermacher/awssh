@@ -32,6 +32,15 @@ export const readInstanceCache = async (
   return (instances ?? []) as FormattedInstance[];
 };
 
+export const writeInstanceCache = async (
+  instances: FormattedInstance[] = [],
+  path?: string,
+) => {
+  const instancesPath = path ?? getCachePath(CacheTypes.Instances);
+
+  await writeYaml(instancesPath, instances);
+};
+
 export const readKeysCache = async (path?: string): Promise<KeyCache> => {
   const keysPath = path ?? getCachePath(CacheTypes.Keys);
 
@@ -40,8 +49,11 @@ export const readKeysCache = async (path?: string): Promise<KeyCache> => {
   return (keys ?? []) as KeyCache;
 };
 
-export const readCaches = (): Promise<[FormattedInstance[], KeyCache]> =>
-  Promise.all([
-    readInstanceCache(),
-    readKeysCache(),
-  ]);
+export const writeKeysCache = async (
+  keyCache: KeyCache = {},
+  path?: string,
+): Promise<void> => {
+  const keysPath = path ?? getCachePath(CacheTypes.Keys);
+
+  await writeYaml(keysPath, keyCache);
+};

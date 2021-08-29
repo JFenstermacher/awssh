@@ -1,6 +1,11 @@
 export type BuildTypes = "darwin" | "linux" | "windows";
 
 export type ConnectionTypes = "public" | "private" | "ssm";
+export enum OfflineCacheModes {
+  AUTO = "auto",
+  PROMPT = "prompt",
+  DISABLED = "disabled",
+}
 
 export type Configuration = {
   baseCommand: string;
@@ -8,6 +13,7 @@ export type Configuration = {
   keysDirectory: string;
   connectVia: ConnectionTypes[];
   templateString: string;
+  offlineCache: OfflineCacheModes;
 };
 
 export type SSHOptions = {

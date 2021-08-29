@@ -5,17 +5,30 @@ import {
   promptInstance,
 } from "../libs/instances.ts";
 import { readConfig } from "../libs/config.ts";
-import { SSHOptions } from "../libs/types.ts";
+import { Configuration, OfflineCacheModes, SSHOptions } from "../libs/types.ts";
+import { readInstanceCache, writeInstanceCache } from "../libs/cache.ts";
 
 export const sshAction = async (options: SSHOptions) => {
   const config = await readConfig();
 
   const instances = await getInstances(config, options);
-  const instanceMap = generateInstanceMap(instances, config, options);
-
-  const instance = await promptInstance(instanceMap);
+  writeInstanceCache(instances);
+  const instance = await promptInstance(instances, config, options);
 
   if (instance) console.log(instance);
+};
+
+export const loadInstances = async (
+  config: Configuration,
+  options: SSHOptions,
+) => {
+  const instances = await getInstances(config, options).catch((err) => {
+    console.error("Failed to load instances...");
+
+    if (config.offlineCache === OfflineCacheModes.DISABLED) throw err;
+  });
+
+  return instances;
 };
 
 export const rootCmd = new Command()

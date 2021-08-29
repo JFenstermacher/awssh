@@ -1,10 +1,17 @@
 import { Command } from "https://deno.land/x/cliffy@v0.19.5/command/mod.ts";
 import {
+  Checkbox,
   Input,
   Select,
 } from "https://deno.land/x/cliffy@v0.19.5/prompt/mod.ts";
-import { readConfig, writeConfig } from "../libs/config.ts";
-import { Configuration, ConnectionTypes } from "../libs/types.ts";
+import { writeInstanceCache, writeKeysCache } from "../libs/cache.ts";
+import { CONFIG_DEFAULTS, readConfig, writeConfig } from "../libs/config.ts";
+import {
+  CacheTypes,
+  Configuration,
+  ConnectionTypes,
+  OfflineCacheModes,
+} from "../libs/types.ts";
 import { isExecutable } from "../libs/util.ts";
 
 type ConfigFunction = (config: Configuration) => Promise<Configuration>;
@@ -20,6 +27,9 @@ export const configureAction = async () => {
     "Connection Priority": configureConnection,
     "Configure Instance List Template": configureTemplate,
     "Keys Home Directory": configureKeysHome,
+    "Offline Cache Configuration": configureOfflineCache,
+    "Reset Defaults": resetDefaults,
+    "Wipe Cache": wipeCacheData,
   };
 
   while (true) {
@@ -94,6 +104,51 @@ export const configureConnection: ConfigFunction = async (config) => {
 
   return config;
 };
+
+export const configureOfflineCache: ConfigFunction = async (config) => {
+  const cacheMode = await Select.prompt({
+    message: "How should offline cache be configured",
+    options: Object.values(OfflineCacheModes),
+  }) as OfflineCacheModes;
+
+  config.offlineCache = cacheMode;
+
+  return config;
+};
+
+export const wipeCacheData: ConfigFunction = async (config) => {
+  const options = Object.entries(CacheTypes).map(([name, value]) => ({
+    name,
+    value,
+  }));
+
+  const caches = await Checkbox.prompt({
+    message: "Which caches should be wiped",
+    options,
+  }) as CacheTypes[];
+
+  for (const cache of caches) {
+    switch (cache) {
+      case CacheTypes.Instances: {
+        await writeInstanceCache();
+        break;
+      }
+
+      case CacheTypes.Keys: {
+        await writeKeysCache();
+        break;
+      }
+
+      default: {
+        console.error("Not sure how this occured");
+      }
+    }
+  }
+
+  return config;
+};
+
+export const resetDefaults: ConfigFunction = async (_) => CONFIG_DEFAULTS;
 
 export const configureCmd = new Command()
   .description("Configure your SSH and SCP options")

@@ -11,7 +11,7 @@ export const readYamlSafe = async (path: string) =>
 
 export const writeYaml = async (
   path: string,
-  data: Record<string, unknown>,
+  data: any,
 ): Promise<void> => {
   await Deno.mkdir(dirname(path), { recursive: true });
 

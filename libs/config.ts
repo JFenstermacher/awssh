@@ -1,6 +1,6 @@
 import { join } from "https://deno.land/std@0.106.0/path/mod.ts";
 import { getHomeDir, readYamlSafe, writeYaml } from "../libs/util.ts";
-import { BuildTypes, Configuration } from "./types.ts";
+import { BuildTypes, Configuration, OfflineCacheModes } from "./types.ts";
 
 const HOME = getHomeDir();
 
@@ -10,6 +10,7 @@ export const CONFIG_DEFAULTS: Configuration = {
   keysDirectory: join(HOME, ".ssh"),
   connectVia: ["public", "private"],
   templateString: "${InstanceId} [${Tags.Name}]",
+  offlineCache: OfflineCacheModes.PROMPT,
 };
 
 export const getConfigPath = () => {

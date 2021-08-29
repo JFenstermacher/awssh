@@ -172,14 +172,20 @@ export const generateInstanceMap = (
   return instanceMap;
 };
 
-export const promptInstance = async (instanceMap: InstanceMap) => {
+export const promptInstance = async (
+  instances: FormattedInstance[],
+  config: Configuration,
+  sshOptions: SSHOptions,
+) => {
+  const instanceMap = generateInstanceMap(instances, config, sshOptions);
   const options = Object.keys(instanceMap);
 
   if (!options.length) return null;
 
   const instanceKey = await Select.prompt({
     message: "Choose an instance",
-    options: Object.keys(instanceMap),
+    options,
+    search: true,
     validate: (value: string) => {
       const { State } = instanceMap[value];
 
