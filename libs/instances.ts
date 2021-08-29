@@ -246,3 +246,17 @@ export const promptInstance = async (
 
   return instanceMap[instanceKey];
 };
+
+export const getInstance = async (
+  config: Configuration,
+  options: SSHOptions,
+) => {
+  const instances = await getInstancesWithCache(config, options);
+  const instance = await promptInstance(instances, config, options);
+
+  if (!instance) {
+    throw new Error("No instances available!");
+  }
+
+  return instance;
+};

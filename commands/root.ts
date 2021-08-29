@@ -3,13 +3,15 @@ import { getInstance } from "../libs/instances.ts";
 import { readConfig } from "../libs/config.ts";
 import { SSHOptions } from "../libs/types.ts";
 import { getKey } from "../libs/keys.ts";
+import { readKeysCache } from "../libs/cache.ts";
 
 export const sshAction = async (options: SSHOptions) => {
   const config = await readConfig();
 
   const instance = await getInstance(config, options);
   const cache = await readKeysCache();
-  const key = await getKey(instance, config, options);
+
+  const key = await getKey(instance, config, cache);
 
   console.log(key);
 };

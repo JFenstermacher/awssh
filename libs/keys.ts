@@ -37,7 +37,7 @@ export const checkCache = async (
 ) => {
   const { keyLocation, hash } = cache[InstanceId as string] || {};
 
-  let key: string;
+  let key: string | null = null;
   if (keyLocation) {
     const currHash = await createFileHash(keyLocation);
 
@@ -52,7 +52,15 @@ export const getKey = async (
   config: Configuration,
   cache: KeyCache,
 ): Promise<string> => {
-  const keys = await listKeys(config);
+  let key = await checkCache(instance, cache);
+
+  if (!key) {
+    const keys = await listKeys(config);
+
+    key = await promptKey(keys);
+  }
+
+  return key;
 };
 
 export const promptKey = async (keys: Record<string, string>) => {
