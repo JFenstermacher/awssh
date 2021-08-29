@@ -13,7 +13,7 @@ export type Configuration = {
   keysDirectory: string;
   connectVia: ConnectionTypes[];
   templateString: string;
-  offlineCache: OfflineCacheModes;
+  offlineCacheMode: OfflineCacheModes;
 };
 
 export type SSHOptions = {

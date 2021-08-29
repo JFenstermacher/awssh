@@ -1,5 +1,8 @@
 import { green, red } from "https://deno.land/std@0.106.0/fmt/colors.ts";
-import { Select } from "https://deno.land/x/cliffy@v0.19.5/prompt/mod.ts";
+import {
+  Confirm,
+  Select,
+} from "https://deno.land/x/cliffy@v0.19.5/prompt/mod.ts";
 import {
   DescribeInstancesCommand,
   DescribeInstancesCommandInput,
@@ -17,8 +20,10 @@ import {
   Configuration,
   FormattedInstance,
   InstanceMap,
+  OfflineCacheModes,
   SSHOptions,
 } from "./types.ts";
+import { readInstanceCache } from "./cache.ts";
 
 export const getClients = (
   { profile, region }: ClientParams = {},
@@ -94,6 +99,47 @@ export const formatInstance = (
     {},
   ),
 });
+
+export const getInstancesWithCache = async (
+  config: Configuration,
+  options: SSHOptions,
+) =>
+  getInstances(config, options).catch(async (err) => {
+    let instances: FormattedInstance[] = [];
+
+    switch (config.offlineCacheMode) {
+      case OfflineCacheModes.AUTO: {
+        instances = await readInstanceCache();
+        break;
+      }
+
+      case OfflineCacheModes.PROMPT: {
+        const confirmed: boolean = await Confirm.prompt(
+          "Could not query instances, use offline cache",
+        );
+
+        if (!confirmed) throw err;
+
+        instances = await readInstanceCache();
+        break;
+      }
+
+      case OfflineCacheModes.DISABLED: {
+        throw err;
+      }
+
+      default: {
+        const msg = [
+          `Invalid offlineCacheMode, ${config.offlineCacheMode} not sure how you got here.`,
+          "Try resetting to defaults.",
+        ].join("\n");
+
+        throw new Error(msg);
+      }
+    }
+
+    return instances;
+  });
 
 export const getInstances = async (
   config: Configuration,

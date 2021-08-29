@@ -26,6 +26,8 @@ export const loadInstances = async (
     console.error("Failed to load instances...");
 
     if (config.offlineCache === OfflineCacheModes.DISABLED) throw err;
+
+    return readInstanceCache();
   });
 
   return instances;

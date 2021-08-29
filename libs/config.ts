@@ -10,7 +10,7 @@ export const CONFIG_DEFAULTS: Configuration = {
   keysDirectory: join(HOME, ".ssh"),
   connectVia: ["public", "private"],
   templateString: "${InstanceId} [${Tags.Name}]",
-  offlineCache: OfflineCacheModes.PROMPT,
+  offlineCacheMode: OfflineCacheModes.PROMPT,
 };
 
 export const getConfigPath = () => {

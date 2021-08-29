@@ -111,7 +111,7 @@ export const configureOfflineCache: ConfigFunction = async (config) => {
     options: Object.values(OfflineCacheModes),
   }) as OfflineCacheModes;
 
-  config.offlineCache = cacheMode;
+  config.offlineCacheMode = cacheMode;
 
   return config;
 };
