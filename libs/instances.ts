@@ -16,6 +16,7 @@ import {
 } from "https://deno.land/x/aws_sdk@v3.23.0-1/client-ssm/mod.ts";
 import { defaultProvider } from "https://deno.land/x/aws_sdk@v3.23.0-1/credential-provider-node/mod.ts";
 import {
+  CacheTypes,
   Configuration,
   FormattedInstance,
   InstanceMap,
@@ -25,7 +26,6 @@ import {
 import { readInstanceCache } from "./cache.ts";
 
 export class Instances {
-  instances: FormattedInstance[] = [];
   config: Configuration;
   options: SSHOptions;
 
@@ -34,8 +34,8 @@ export class Instances {
     this.options = options;
   }
 
-  async load() {
-    this.instances = await this.getInstances().catch(
+  async get() {
+    const instances = await this.getInstances().catch(
       async (err) => {
         let instances: FormattedInstance[] = [];
 
@@ -73,13 +73,15 @@ export class Instances {
         return instances;
       },
     );
+
+    return instances;
   }
 
-  async save() {
+  async save(instances: FormattedInstance[]) {
   }
 
-  async prompt() {
-    const instanceMap = this.generateInstanceMap();
+  async prompt(instances: FormattedInstance[]) {
+    const instanceMap = this.generateInstanceMap(instances);
     const options = Object.keys(instanceMap);
 
     if (!options.length) {
@@ -221,10 +223,10 @@ export class Instances {
     return instances;
   }
 
-  generateInstanceMap(): InstanceMap {
+  generateInstanceMap(instances: FormattedInstance[]): InstanceMap {
     const instanceMap: InstanceMap = {};
 
-    for (const instance of this.instances) {
+    for (const instance of instances) {
       const pubFilter = this.options.pub && !instance.PublicIpAddress;
       const ssmFilter = this.options.ssm && !instance.SSMEnabled;
 
