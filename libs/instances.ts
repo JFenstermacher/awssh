@@ -16,22 +16,26 @@ import {
 } from "https://deno.land/x/aws_sdk@v3.23.0-1/client-ssm/mod.ts";
 import { defaultProvider } from "https://deno.land/x/aws_sdk@v3.23.0-1/credential-provider-node/mod.ts";
 import {
-  CacheTypes,
   Configuration,
   FormattedInstance,
   InstanceMap,
   OfflineCacheModes,
   SSHOptions,
 } from "./types.ts";
-import { readInstanceCache } from "./cache.ts";
+import { getCacheDirectory, readYamlSafe, writeYaml } from "./util.ts";
+import { join } from "https://deno.land/std@0.101.0/node/path.ts";
 
 export class Instances {
   config: Configuration;
   options: SSHOptions;
+  cachePath: string;
 
   constructor(config: Configuration, options: SSHOptions) {
     this.config = config;
     this.options = options;
+
+    const cacheDirectory = getCacheDirectory();
+    this.cachePath = join(cacheDirectory, "instances.yaml");
   }
 
   async get() {
@@ -41,7 +45,7 @@ export class Instances {
 
         switch (this.config.offlineCacheMode) {
           case OfflineCacheModes.AUTO: {
-            instances = await readInstanceCache();
+            instances = await this.read();
             break;
           }
 
@@ -52,7 +56,7 @@ export class Instances {
 
             if (!confirmed) throw err;
 
-            instances = await readInstanceCache();
+            instances = await this.read();
             break;
           }
 
@@ -77,7 +81,14 @@ export class Instances {
     return instances;
   }
 
+  async read(): Promise<FormattedInstance[]> {
+    const instances = await readYamlSafe(this.cachePath);
+
+    return (instances ?? []) as FormattedInstance[];
+  }
+
   async save(instances: FormattedInstance[]) {
+    await writeYaml(this.cachePath, instances);
   }
 
   async prompt(instances: FormattedInstance[]) {

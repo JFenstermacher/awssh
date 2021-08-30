@@ -57,9 +57,12 @@ export type InstanceMap = {
   [key: string]: FormattedInstance;
 };
 
+export type Key = {
+  name: string;
+  location: string;
+  hash: string;
+};
+
 export type KeyCache = {
-  [instanceId: string]: {
-    keyLocation: string;
-    hash: string;
-  };
+  [instanceId: string]: Key;
 };

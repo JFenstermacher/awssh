@@ -3,7 +3,8 @@ import {
   parse,
   stringify,
 } from "https://deno.land/std@0.106.0/encoding/yaml.ts";
-import { dirname } from "https://deno.land/std@0.106.0/path/mod.ts";
+import { dirname, join } from "https://deno.land/std@0.106.0/path/mod.ts";
+import { BuildTypes } from "./types.ts";
 
 export const readYamlSafe = async (path: string) =>
   Deno.readTextFile(path)
@@ -40,4 +41,19 @@ export const createFileHash = async (path: string): Promise<string | null> => {
   const hash = createHash("md5");
 
   return contents ? hash.update(contents).toString() : null;
+};
+
+export const getCacheDirectory = () => {
+  const { build, env } = Deno;
+
+  const home = getHomeDir();
+  const xdg = env.get("XDG_CACHE_HOME");
+
+  const osMapping: Record<BuildTypes, string[]> = {
+    darwin: [home, "Library", "Caches", "awssh"],
+    windows: [home, "%LOCALAPPDATA%", "awssh"],
+    linux: [home, ".cache", "awssh"],
+  };
+
+  return xdg ? join(xdg, "awssh") : join(...osMapping[build.os]);
 };

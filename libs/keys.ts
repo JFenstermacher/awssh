@@ -1,79 +1,148 @@
-import { join } from "https://deno.land/std@0.101.0/node/path.ts";
+import { createHash } from "https://deno.land/std@0.101.0/hash/mod.ts";
+import {
+  join,
+  parse,
+  resolve,
+} from "https://deno.land/std@0.101.0/node/path.ts";
 import { Select } from "https://deno.land/x/cliffy@v0.19.5/prompt/select.ts";
-import { Configuration, FormattedInstance, KeyCache } from "./types.ts";
-import { createFileHash, isExecutable } from "./util.ts";
+import {
+  Configuration,
+  FormattedInstance,
+  Key,
+  KeyCache,
+  SSHOptions,
+} from "./types.ts";
+import {
+  createFileHash,
+  getCacheDirectory,
+  isExecutable,
+  readYamlSafe,
+  writeYaml,
+} from "./util.ts";
 
-export const testFile = async (path: string): Promise<boolean> => {
-  const process = Deno.run({
-    cmd: ["ssh-keygen", "-l", "-f", path],
-    stdout: "null",
-  });
+export class Keys {
+  config: Configuration;
+  options: SSHOptions;
+  cachePath: string;
+  cache: KeyCache = {};
 
-  const { success } = await process.status();
+  constructor(config: Configuration, options: SSHOptions) {
+    this.config = config;
+    this.options = options;
 
-  return success;
-};
-
-export const listKeys = async ({ keysDirectory }: Configuration) => {
-  const files = Deno.readDir(keysDirectory);
-
-  const keygenExists = await isExecutable("ssh-keygen");
-  const check = keygenExists ? testFile : async (_: string) => true;
-
-  const keys: Record<string, string> = {};
-  for await (const { name } of files) {
-    const fullpath = join(keysDirectory, name);
-    const isKey = await check(fullpath);
-
-    if (isKey) keys[name] = fullpath;
+    const cacheDirectory = getCacheDirectory();
+    this.cachePath = join(cacheDirectory, "keys.yaml");
   }
 
-  return keys;
-};
+  async get() {
+    const [keys, cache] = await Promise.all([
+      this.listKeys(),
+      this.read(),
+    ]);
 
-export const checkCache = async (
-  { InstanceId }: FormattedInstance,
-  cache: KeyCache,
-) => {
-  const { keyLocation, hash } = cache[InstanceId as string] || {};
+    this.cache = cache;
 
-  let key: string | null = null;
-  if (keyLocation) {
-    const currHash = await createFileHash(keyLocation);
-
-    if (hash === currHash) key = keyLocation;
+    return keys;
   }
 
-  return key;
-};
+  async prompt(instance: FormattedInstance, keys: Key[]): Promise<Key> {
+    const { identityFile } = this.options;
+    if (identityFile) return this.format(identityFile);
 
-export const getKey = async (
-  instance: FormattedInstance,
-  config: Configuration,
-  cache: KeyCache,
-): Promise<string> => {
-  let key = await checkCache(instance, cache);
+    const cacheKey = await this.checkCache(instance);
+    if (cacheKey) return cacheKey;
 
-  if (!key) {
-    const keys = await listKeys(config);
+    const options = keys.map(({ name }, index) => ({
+      name,
+      value: index.toString(),
+    }));
 
-    key = await promptKey(keys);
+    const index = await Select.prompt({
+      message: "Choose an identity file",
+      options,
+      search: true,
+    });
+
+    return keys[parseInt(index)];
   }
 
-  return key;
-};
+  async read(): Promise<KeyCache> {
+    const keys = await readYamlSafe(this.cachePath);
 
-export const promptKey = async (keys: Record<string, string>) => {
-  const options = Object.entries(keys).map(([name, value]) => ({
-    name,
-    value,
-  }));
+    return (keys ?? {}) as KeyCache;
+  }
 
-  const key = await Select.prompt({
-    message: "Choose an identity file",
-    options,
-    search: true,
-  });
+  async save(instanceId: string, key: Key) {
+    this.cache[instanceId] = key;
 
-  return key;
-};
+    await writeYaml(this.cachePath, this.cache);
+  }
+
+  async listKeys(): Promise<Key[]> {
+    const { keysDirectory } = this.config;
+    const files = Deno.readDir(keysDirectory);
+
+    const keygenExists = await isExecutable("ssh-keygen");
+    const check = keygenExists ? this.isFileKey : async (_: string) => true;
+
+    const keys: Key[] = [];
+    for await (const { name } of files) {
+      const fullpath = join(keysDirectory, name);
+      const isKey = await check(fullpath);
+
+      if (isKey) {
+        const key = await this.format(fullpath);
+
+        keys.push(key);
+      }
+    }
+
+    return keys;
+  }
+
+  async format(path: string): Promise<Key> {
+    const { name } = parse(path);
+    const hash = await this.hash(path);
+
+    if (!hash) {
+      throw new Error(`Key file ${path} doesn't exist`);
+    }
+
+    return {
+      name,
+      location: resolve(path),
+      hash,
+    };
+  }
+
+  async hash(path: string) {
+    const contents = await Deno.readTextFile(path).catch((_) => null);
+
+    const hash = createHash("md5");
+
+    return contents ? hash.update(contents).toString() : null;
+  }
+
+  async isFileKey(path: string) {
+    const process = Deno.run({
+      cmd: ["ssh-keygen", "-l", "-f", path],
+      stdout: "null",
+    });
+
+    const { success } = await process.status();
+
+    return success;
+  }
+
+  async checkCache(instance: FormattedInstance): Promise<Key | null> {
+    const entry = this.cache[instance.InstanceId as string] || {};
+    if (!entry.location) return null;
+
+    // Checking whether file has been renamed / moved
+    // If the current hash at the location of the file is equal to the previous hash, then must be same file
+    // Instance IDs are unique, so if instanceID is represented in cache, and hashes match, key is good to use
+    const currentHash = await this.hash(entry.location);
+
+    return currentHash === entry.hash ? entry : null;
+  }
+}
