@@ -77,6 +77,13 @@ export class Keys {
     await writeYaml(this.cachePath, this.cache);
   }
 
+  static async wipe(cache: KeyCache = {}) {
+    const cacheDirectory = getCacheDirectory();
+    const cachePath = join(cacheDirectory, "keys.yaml");
+
+    await writeYaml(cachePath, cache);
+  }
+
   async listKeys(): Promise<Key[]> {
     const { keysDirectory } = this.config;
     const files = Deno.readDir(keysDirectory);

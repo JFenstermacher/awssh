@@ -91,6 +91,13 @@ export class Instances {
     await writeYaml(this.cachePath, instances);
   }
 
+  static async save(instances: FormattedInstance[] = []) {
+    const cacheDirectory = getCacheDirectory();
+    const cachePath = join(cacheDirectory, "instances.yaml");
+
+    await writeYaml(cachePath, instances);
+  }
+
   async prompt(instances: FormattedInstance[]) {
     const instanceMap = this.generateInstanceMap(instances);
     const options = Object.keys(instanceMap);
