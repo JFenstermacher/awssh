@@ -1,6 +1,10 @@
 export type BuildTypes = "darwin" | "linux" | "windows";
 
-export type ConnectionTypes = "public" | "private" | "ssm";
+export enum ConnectionTypes {
+  PUBLIC = "public",
+  PRIVATE = "private",
+  SSM = "ssm",
+}
 export enum OfflineCacheModes {
   AUTO = "auto",
   PROMPT = "prompt",

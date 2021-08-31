@@ -13,7 +13,6 @@ import {
   SSHOptions,
 } from "./types.ts";
 import {
-  createFileHash,
   getCacheDirectory,
   isExecutable,
   readYamlSafe,

@@ -85,8 +85,8 @@ export const configureTemplate: ConfigFunction = async (config) => {
 export const configureConnection: ConfigFunction = async (config) => {
   const ssm = await isExecutable("session-manager-plugin");
 
-  let options = ["public", "private"];
-  if (ssm) options.push("ssm");
+  let options = [ConnectionTypes.PUBLIC, ConnectionTypes.PRIVATE];
+  if (ssm) options.push(ConnectionTypes.SSM);
 
   config.connectVia = [];
   while (options.length > 1) {
