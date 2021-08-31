@@ -1,11 +1,11 @@
 import { Command } from "https://deno.land/x/cliffy@v0.19.5/command/mod.ts";
-import { readConfig } from "../libs/config.ts";
 import { SSHOptions } from "../libs/types.ts";
 import { Instances } from "../libs/instances.ts";
 import { Keys } from "../libs/keys.ts";
+import { Configuration } from "../libs/config.ts";
 
 export const sshAction = async (options: SSHOptions) => {
-  const config = await readConfig();
+  const config = await Configuration.get();
 
   const instanceObj = new Instances(config, options);
   const keyObj = new Keys(config, options);
