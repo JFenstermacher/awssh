@@ -17,6 +17,7 @@ import {
 import { defaultProvider } from "https://deno.land/x/aws_sdk@v3.23.0-1/credential-provider-node/mod.ts";
 import {
   Configuration,
+  ConnectionTypes,
   FormattedInstance,
   InstanceMap,
   OfflineCacheModes,
@@ -91,7 +92,7 @@ export class Instances {
     await writeYaml(this.cachePath, instances);
   }
 
-  static async save(instances: FormattedInstance[] = []) {
+  static async wipe(instances: FormattedInstance[] = []) {
     const cacheDirectory = getCacheDirectory();
     const cachePath = join(cacheDirectory, "instances.yaml");
 
@@ -223,7 +224,7 @@ export class Instances {
   }
 
   async getInstances() {
-    const ssmEnabled = this.config.connectVia.includes("ssm");
+    const ssmEnabled = this.config.connectVia.includes(ConnectionTypes.SSM);
 
     const [instanceList, inventory] = await Promise.all([
       this.listInstances(),
