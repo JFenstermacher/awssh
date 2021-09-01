@@ -4,17 +4,12 @@ import {
 } from "https://deno.land/std@0.106.0/testing/asserts.ts";
 import { Input } from "https://deno.land/x/cliffy@v0.19.5/prompt/mod.ts";
 import { v1 } from "https://deno.land/std@0.106.0/uuid/mod.ts";
-import {
-  configureBaseCommand,
-  configureKeysHome,
-  configureTemplate,
-} from "../commands/config.ts";
-import * as config from "../libs/config.ts";
+import { Configuration } from "../libs/config.ts";
 
 Deno.test("Config path can be set via env var", async () => {
   Deno.env.set("XDG_CONFIG_HOME", Deno.cwd());
 
-  const configPath = config.getConfigPath();
+  const configPath = Configuration.getConfigPath();
 
   assertEquals(configPath, `${Deno.cwd()}/awssh/config.yaml`);
 });
@@ -25,7 +20,7 @@ Deno.test("Can configure base command", async () => {
   const newCommand = "ssh-whatever";
   Input.inject(newCommand);
 
-  const result = await configureBaseCommand(config.CONFIG_DEFAULTS);
+  const result = await Configuration.configureCommand(Configuration.defaults);
 
   assertEquals(result.baseCommand, newCommand);
 });
@@ -36,7 +31,7 @@ Deno.test("Can configure keys home", async () => {
   const newDir = Deno.cwd();
   Input.inject(newDir);
 
-  const result = await configureKeysHome(config.CONFIG_DEFAULTS);
+  const result = await Configuration.configureKeysHome(Configuration.defaults);
 
   assertEquals(result.keysDirectory, newDir);
 });
@@ -48,7 +43,7 @@ Deno.test("Configuring keys home will fail when pased not a directory", async ()
   const fn = async () => {
     Input.inject(newDir);
 
-    await configureKeysHome(config.CONFIG_DEFAULTS);
+    await Configuration.configureKeysHome(Configuration.defaults);
   };
 
   await assertThrowsAsync(fn, Error, "Please provide a valid directory");
@@ -60,6 +55,6 @@ Deno.test("Can configure template", async () => {
   const newTemplateString = "${Instance.Id}";
   Input.inject(newTemplateString);
 
-  const result = await configureTemplate(config.CONFIG_DEFAULTS);
+  const result = await Configuration.configureTemplate(Configuration.defaults);
   assertEquals(result.templateString, newTemplateString);
 });

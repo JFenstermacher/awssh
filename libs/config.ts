@@ -53,7 +53,7 @@ export class Configuration {
     const { build, env } = Deno;
 
     const home = getHomeDir();
-    const xdg = env.get("XDG_CACHE_HOME");
+    const xdg = env.get("XDG_CONFIG_HOME");
 
     const osMapping: Record<BuildTypes, string[]> = {
       darwin: [home, ".config", "awssh", "config.yaml"],

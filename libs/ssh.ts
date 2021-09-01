@@ -8,7 +8,7 @@ import {
   SSHOptions,
 } from "./types.ts";
 
-export class SSHCP {
+export class SSH {
   config: Configuration;
   options: SSHOptions;
   instances: Instances;
@@ -19,6 +19,17 @@ export class SSHCP {
     this.options = options;
     this.instances = new Instances(config, options);
     this.keys = new Keys(config, options);
+  }
+
+  async run(instance: FormattedInstance, key: Key) {
+    const cmd = this.generateCommand(instance, key);
+    console.log(`Command: ${cmd}`);
+
+    const process = Deno.run({ cmd });
+
+    const { success } = await process.status();
+
+    return success;
   }
 
   generateCommand(instance: FormattedInstance, key: Key) {
@@ -34,7 +45,7 @@ export class SSHCP {
       "-p",
       this.options.port,
       hostname,
-    ].join(" ");
+    ] as string[];
 
     return command;
   }
