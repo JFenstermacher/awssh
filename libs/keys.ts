@@ -51,6 +51,10 @@ export class Keys {
     const cacheKey = await this.checkCache(instance);
     if (cacheKey) return cacheKey;
 
+    // If keyPair name matches PEM -> keypair = dev-keypair : PEM = dev-keypair.pem
+    const namedKey = this.detectKeyByName(instance.KeyName as string, keys);
+    if (namedKey) return namedKey;
+
     const options = keys.map(({ name }, index) => ({
       name,
       value: index.toString(),
@@ -150,5 +154,13 @@ export class Keys {
     const currentHash = await this.hash(entry.location);
 
     return currentHash === entry.hash ? entry : null;
+  }
+
+  detectKeyByName(keyName: string, keys: Key[]) {
+    return keys.find((key) => {
+      const { name } = parse(key.name);
+
+      return name === keyName;
+    });
   }
 }
