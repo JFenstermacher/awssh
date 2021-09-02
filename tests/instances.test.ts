@@ -1,7 +1,7 @@
 import { green } from "https://deno.land/std@0.106.0/fmt/colors.ts";
 import { assertEquals } from "https://deno.land/std@0.106.0/testing/asserts.ts";
-import { CONFIG_DEFAULTS } from "../libs/config.ts";
-import * as instances from "../libs/instances.ts";
+import { Configuration } from "../libs/config.ts";
+import { Instances } from "../libs/instances.ts";
 import { FormattedInstance, InstanceMap } from "../libs/types.ts";
 
 const TEST_INSTANCES: FormattedInstance[] = [
@@ -48,10 +48,10 @@ const TEST_INSTANCES: FormattedInstance[] = [
 
 Deno.test("Template string rendering works", async () => {
   const templateString = "${InstanceId} [${Tags.Name}]";
-  const rendered = instances.renderTemplateString(
-    TEST_INSTANCES[0],
-    templateString,
-  );
+  const config = Object.assign(Configuration.defaults, { templateString });
+  const instancesClass = new Instances(config, {});
+
+  const rendered = instancesClass.renderTemplateString(TEST_INSTANCES[0]);
 
   const expected = "i-abc [prefix-0]";
   assertEquals(rendered, expected);
@@ -59,10 +59,10 @@ Deno.test("Template string rendering works", async () => {
 
 Deno.test("Unavailable attribute remains", () => {
   const templateString = "${Testing}";
-  const rendered = instances.renderTemplateString(
-    TEST_INSTANCES[0],
-    templateString,
-  );
+  const config = Object.assign(Configuration.defaults, { templateString });
+  const instancesClass = new Instances(config, {});
+
+  const rendered = instancesClass.renderTemplateString(TEST_INSTANCES[0]);
 
   const expected = "${Testing}";
   assertEquals(rendered, expected);
@@ -70,10 +70,10 @@ Deno.test("Unavailable attribute remains", () => {
 
 Deno.test("Nested access failure handled", () => {
   const templateString = "${Tags.Test}";
-  const rendered = instances.renderTemplateString(
-    TEST_INSTANCES[0],
-    templateString,
-  );
+  const config = Object.assign(Configuration.defaults, { templateString });
+  const instancesClass = new Instances(config, {});
+
+  const rendered = instancesClass.renderTemplateString(TEST_INSTANCES[0]);
 
   const expected = "${Tags.Test}";
   assertEquals(rendered, expected);
@@ -81,19 +81,13 @@ Deno.test("Nested access failure handled", () => {
 
 Deno.test("Instance map can be generated", () => {
   const templateString = "${InstanceId} [${Tags.Name}]";
+  const config = Object.assign(Configuration.defaults, { templateString });
+  const instancesClass = new Instances(config, {});
 
-  const config = {
-    ...CONFIG_DEFAULTS,
-    templateString,
-  };
-
-  const instanceMap = instances.generateInstanceMap(TEST_INSTANCES, config, {});
+  const instanceMap = instancesClass.generateInstanceMap(TEST_INSTANCES);
 
   const expected = TEST_INSTANCES.reduce((res, instance) => {
-    const rendered = instances.renderTemplateString(
-      instance,
-      templateString,
-    );
+    const rendered = instancesClass.renderTemplateString(instance);
 
     res[green(rendered)] = instance;
 
