@@ -137,6 +137,8 @@ export class Keys {
     const process = Deno.run({
       cmd: ["ssh-keygen", "-l", "-f", path],
       stdout: "null",
+      sterr: "null",
+      stdin: "null",
     });
 
     const { success } = await process.status();

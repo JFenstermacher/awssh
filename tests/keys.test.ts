@@ -3,7 +3,7 @@ import { assertEquals } from "https://deno.land/std@0.106.0/testing/asserts.ts";
 import { Configuration } from "../libs/config.ts";
 import { Keys } from "../libs/keys.ts";
 import { Key } from "../libs/types.ts";
-import { readYamlSafe } from "../libs/util.ts";
+import { checkFileExists } from "./utilities.ts";
 
 const TEST_KEY: Key = {
   name: "test-key",
@@ -39,4 +39,14 @@ Deno.test("Can save and wipe cache", async () => {
   assertEquals(cache, {});
 
   await Deno.remove(cacheDir, { recursive: true });
+});
+
+Deno.test("Non-key files throw failures", async () => {
+  const keysClass = new Keys(Configuration.defaults, {});
+
+  const indexFile = join(Deno.cwd(), "index.ts");
+
+  const output = await keysClass.isFileKey(indexFile);
+
+  assertEquals(output, false);
 });
