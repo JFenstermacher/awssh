@@ -7,6 +7,7 @@ import { Configuration } from "../libs/config.ts";
 import { Instances } from "../libs/instances.ts";
 import { FormattedInstance, InstanceMap } from "../libs/types.ts";
 import { readYamlSafe } from "../libs/util.ts";
+import { checkFileExists } from "./utilities.ts";
 
 const UNFORMATTED_INSTANCE: Instance = {
   ImageId: "ami-123",
@@ -69,12 +70,6 @@ const FORMATTED_INSTANCES: FormattedInstance[] = [
     Tags: { Name: "prefix-2" },
   },
 ];
-
-const checkFileExists = async (filepath: string) =>
-  Deno
-    .stat(filepath)
-    .then(() => true)
-    .catch(() => false);
 
 Deno.test("Template string rendering works", async () => {
   const templateString = "${InstanceId} [${Tags.Name}]";

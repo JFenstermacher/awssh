@@ -1,0 +1,4 @@
+test-instance:
+  name: test-key
+  location: /home/jfenstermacher/workspace/awssh
+  hash: test-hash
