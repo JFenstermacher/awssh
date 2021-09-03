@@ -67,7 +67,7 @@ export class Instances {
 
           default: {
             const msg = [
-              `Invalid offlineCacheMode, ${this.config.offlineCacheMode}, not sure how you got here.`,
+              `Invalid cacheMode, ${this.config.offlineCacheMode}, not sure how you got here.`,
               "Try resetting to defaults.",
             ].join("\n");
 
