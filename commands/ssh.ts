@@ -20,7 +20,7 @@ export const sshAction = async (options: SSHOptions) => {
   console.log(key);
 };
 
-export const rootCmd = new Command()
+export const sshCmd = new Command()
   .name("awssh")
   .option("-d, --dry-run", "Prints the command that will be run")
   .option("-i, --identity-file <identityFile:string>", "Identity file")
