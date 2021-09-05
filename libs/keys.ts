@@ -137,11 +137,14 @@ export class Keys {
     const process = Deno.run({
       cmd: ["ssh-keygen", "-l", "-f", path],
       stdout: "null",
-      sterr: "null",
+      stderr: "null",
       stdin: "null",
     });
 
-    const { success } = await process.status();
+    const { success } = await process.status()
+      .catch(() => ({ success: false }));
+
+    Deno.close(process.rid);
 
     return success;
   }
