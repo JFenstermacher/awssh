@@ -1,5 +1,5 @@
 import { createHash } from "https://deno.land/std@0.101.0/hash/mod.ts";
-import { join, resolve } from "https://deno.land/std@0.101.0/node/path.ts";
+import { basename, join } from "https://deno.land/std@0.101.0/node/path.ts";
 import { assertEquals } from "https://deno.land/std@0.106.0/testing/asserts.ts";
 import { Configuration } from "../libs/config.ts";
 import { Keys } from "../libs/keys.ts";
@@ -71,19 +71,34 @@ Deno.test("Can write, check, and wipe cache", async () => {
   await Keys.wipe();
 
   cache = await keysClass.read();
-  assertEquals(cache, {});
-
   await Deno.remove(cacheDir, { recursive: true });
+
+  assertEquals(cache, {});
 });
 
-Deno.test("Non-key files throw failures", async () => {
-  const keysClass = new Keys(Configuration.defaults, {});
+Deno.test("Can list keys", async () => {
+  const keysDirectory = join(Deno.cwd(), "tests", "testKeysDir");
+  await Deno.mkdir(keysDirectory, { recursive: true });
 
-  const indexFile = join(Deno.cwd(), "index.ts");
+  const expected = [1, 2, 3].map((el) => `test-key-${el}.pem`);
 
-  const output = await keysClass.isFileKey(indexFile);
+  for (const el of expected) {
+    const keyPath = join(keysDirectory, el);
+    await Deno.writeTextFile(keyPath, "TEST");
+  }
 
-  assertEquals(output, false);
+  const config = {
+    ...Configuration.defaults,
+    keysDirectory: keysDirectory,
+  };
+
+  const keysClass = new Keys(config, {});
+  const keys = await keysClass.listKeys();
+
+  const keyNames = keys.map(({ name }) => name);
+  await Deno.remove(keysDirectory, { recursive: true });
+
+  assertEquals(new Set(keyNames), new Set(expected));
 });
 
 Deno.test("Can detect key by name", () => {
@@ -103,8 +118,8 @@ Deno.test("Can format a key file", async () => {
   const indexFile = join(Deno.cwd(), "index.ts");
 
   const expected: Key = {
-    name: "index",
-    location: resolve(indexFile),
+    name: basename(indexFile),
+    location: indexFile,
     hash: await keysClass.hash(indexFile) as string,
   };
 
