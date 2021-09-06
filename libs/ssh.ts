@@ -38,7 +38,7 @@ export class SSH {
   }
 
   async run(instance: FormattedInstance, key: Key) {
-    const cmd = this.generateCommand(instance, key);
+    const cmd = this.generateSSHCommand(instance, key);
     console.log(`Command: ${cmd.join(" ")}`);
 
     if (this.options.dryRun) return false;
@@ -61,8 +61,8 @@ export class SSH {
     return this.keys.save(instance.InstanceId as string, key);
   }
 
-  generateCommand(instance: FormattedInstance, key: Key) {
-    let hostname = this.getHost(instance) as string;
+  generateSSHCommand(instance: FormattedInstance, key: Key) {
+    const hostname = this.getHost(instance) as string;
 
     const options = this.options.option?.map((opt) => `-o ${opt}`) || [];
 
@@ -79,6 +79,12 @@ export class SSH {
     ] as string[];
 
     return command;
+  }
+
+  generateSCPCommand(instance: FormattedInstance, key: Key) {
+    const hostname = this.getHost(instance) as string;
+
+    const options = this.options.option?.map((opt) => `-o ${opt}`) || [];
   }
 
   getHost(instance: FormattedInstance) {

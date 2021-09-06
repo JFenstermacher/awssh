@@ -83,6 +83,7 @@ export class Configuration {
       const funcName = await Select.prompt({
         message: "Choose an item to configure (ESC to exit)",
         options: Object.keys(funcMapping),
+        search: true,
       });
 
       config = await funcMapping[funcName](config);
