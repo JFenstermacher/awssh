@@ -18,6 +18,7 @@ export type Configuration = {
   connectVia: ConnectionTypes[];
   templateString: string;
   offlineCacheMode: OfflineCacheModes;
+  username: string;
 };
 
 export type SSHOptions = {
@@ -69,4 +70,9 @@ export type Key = {
 
 export type KeyCache = {
   [instanceId: string]: Key;
+};
+
+export type SCPFile = {
+  path: string;
+  remote: boolean;
 };

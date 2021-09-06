@@ -27,12 +27,13 @@ type ConfigMapping = {
 
 export class Configuration {
   static defaults: ConfigurationData = {
-    baseCommand: "ssh",
+    baseCommand: "",
     defaultUser: "ec2-user",
     keysDirectory: join(HOME, ".ssh"),
     connectVia: [ConnectionTypes.PUBLIC, ConnectionTypes.PRIVATE],
     templateString: "${InstanceId} [${Tags.Name}]",
     offlineCacheMode: OfflineCacheModes.PROMPT,
+    username: "ec2-user",
   };
 
   static async get(): Promise<ConfigurationData> {
@@ -70,11 +71,12 @@ export class Configuration {
     let config = await Configuration.get();
 
     const funcMapping: ConfigMapping = {
-      "Base Command": Configuration.configureCommand,
+      "Base Command Options": Configuration.configureCommand,
       "Connection Priority": Configuration.configureConnection,
-      "Configure Instance List Template": Configuration.configureTemplate,
+      "Instance List Template": Configuration.configureTemplate,
       "Keys Home Directory": Configuration.configureKeysHome,
       "Offline Cache Configuration": Configuration.configureCache,
+      "Username": Configuration.configureUsername,
       "Reset Defaults": async (_) => Configuration.defaults,
       "Wipe Cache": Configuration.wipeCache,
     };
@@ -94,7 +96,7 @@ export class Configuration {
 
   static async configureCommand(config: ConfigurationData) {
     const baseCommand = await Input.prompt({
-      message: "What will the base SSH command be",
+      message: "What are the base command options",
       default: config.baseCommand,
     });
 
@@ -160,6 +162,19 @@ export class Configuration {
     }) as OfflineCacheModes;
 
     config.offlineCacheMode = cacheMode;
+
+    return config;
+  }
+
+  static async configureUsername(config: ConfigurationData) {
+    const username = await Input.prompt({
+      message: "What is the common username",
+      default: "ec2-user",
+      validate: (value: string) =>
+        value ? true : "Username must have at least one character",
+    });
+
+    config.username = username;
 
     return config;
   }

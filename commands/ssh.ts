@@ -28,9 +28,7 @@ export const sshCmd = new Command()
   .name("awssh")
   .option("-d, --dry-run", "Prints the command that will be run")
   .option("-i, --identity-file <identityFile:string>", "Identity file")
-  .option("-l, --login-name <loginName:string>", "SSH login name", {
-    default: "ec2-user",
-  })
+  .option("-l, --login-name <loginName:string>", "SSH login name")
   .option("-o, --option <option:string>", "SSH options", { collect: true })
   .option("-p, --port <port:number>", "SSH port", { default: 22 })
   .option("--profile <profile:string>", "AWS profile")

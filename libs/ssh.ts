@@ -1,3 +1,4 @@
+import { basename, resolve } from "https://deno.land/std@0.101.0/path/mod.ts";
 import { Instances } from "./instances.ts";
 import { Keys } from "./keys.ts";
 import {
@@ -5,6 +6,7 @@ import {
   ConnectionTypes,
   FormattedInstance,
   Key,
+  SCPFile,
   SSHOptions,
 } from "./types.ts";
 
@@ -67,12 +69,13 @@ export class SSH {
     const options = this.options.option?.map((opt) => `-o ${opt}`) || [];
 
     const command = [
+      "ssh",
       this.config.baseCommand,
       ...options,
       "-i",
       key.location,
       "-l",
-      this.options.loginName,
+      this.options.loginName ?? this.config.username,
       "-p",
       this.options.port,
       hostname,
@@ -81,10 +84,84 @@ export class SSH {
     return command;
   }
 
-  generateSCPCommand(instance: FormattedInstance, key: Key) {
+  async verifyPaths(source: string, destination?: string) {
+    const statSafe = (filepath: string) =>
+      Deno.stat(filepath)
+        .catch(() => ({ isFile: false, isDirectory: false }));
+
+    const isLocal = ({ isFile, isDirectory }: Partial<Deno.FileInfo>) =>
+      isFile || isDirectory;
+
+    const sourceStat = await statSafe(source);
+
+    if (sourceStat.isDirectory) {
+      throw Error("${source} is a directory, please specify a file instead");
+    }
+
+    const sourceFile: SCPFile = {
+      path: source,
+      remote: !isLocal(sourceStat),
+    };
+
+    if (sourceFile.remote) {
+      if (!destination) destination = basename(source);
+
+      const destStat = await statSafe(destination);
+
+      if (isLocal(destStat)) {
+        throw Error("Destination already exists");
+      }
+
+      const destFile: SCPFile = {
+        path: destination,
+        remote: false,
+      };
+
+      return [sourceFile, destFile];
+    }
+
+    if (!destination) {
+      throw Error("Must specify a remote destination");
+    }
+
+    const destFile: SCPFile = {
+      path: destination,
+      remote: true,
+    };
+
+    return [sourceFile, destFile];
+  }
+
+  generateSCPCommand(
+    instance: FormattedInstance,
+    key: Key,
+    source: SCPFile,
+    destination: SCPFile,
+  ) {
     const hostname = this.getHost(instance) as string;
+    const username = this.options.loginName ?? this.config.username;
 
     const options = this.options.option?.map((opt) => `-o ${opt}`) || [];
+
+    const generatePathValue = ({ path, remote }: SCPFile): string => {
+      if (!remote) return path;
+
+      return `${username}@${hostname}:${path}`;
+    };
+
+    const command = [
+      "scp",
+      this.config.baseCommand,
+      ...options,
+      "-i",
+      key.location,
+      "-p",
+      this.options.port,
+      generatePathValue(source),
+      generatePathValue(destination),
+    ] as string[];
+
+    return command;
   }
 
   getHost(instance: FormattedInstance) {
