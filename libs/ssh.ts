@@ -112,11 +112,8 @@ export class SSH {
 
     const sourceStat = await statSafe(source);
 
-    if (sourceStat.isDirectory) {
-      throw Error("${source} is a directory, please specify a file instead");
-    }
-
     const sourceFile: SCPFile = {
+      directory: sourceStat.isDirectory,
       path: source,
       remote: !isLocal(sourceStat),
     };

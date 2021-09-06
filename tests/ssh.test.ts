@@ -148,7 +148,7 @@ Deno.test("SCP: Source is local, and destination is not given", async () => {
   );
 });
 
-Deno.test("SCP: Source is local, and destination given", async () => {
+Deno.test("SCP: Source is local, destination given, and is file", async () => {
   const ssh = new SSH(Configuration.defaults, {});
 
   const indexFile = join(Deno.cwd(), "index.ts");
@@ -158,6 +158,7 @@ Deno.test("SCP: Source is local, and destination given", async () => {
 
   const expected: [SCPFile, SCPFile] = [
     {
+      directory: false,
       path: indexFile,
       remote: false,
     },
@@ -193,6 +194,7 @@ Deno.test("SCP: Source is remote, destination not given, and basename doesn't ex
 
   const expected: [SCPFile, SCPFile] = [
     {
+      directory: false,
       path: remotePath,
       remote: true,
     },
@@ -231,6 +233,7 @@ Deno.test("SCP: Source is remote, destination given", async () => {
 
   const expected: [SCPFile, SCPFile] = [
     {
+      directory: false,
       path: remotePath,
       remote: true,
     },

@@ -73,6 +73,7 @@ export type KeyCache = {
 };
 
 export type SCPFile = {
+  directory?: boolean;
   path: string;
   remote: boolean;
 };
