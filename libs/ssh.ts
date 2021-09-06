@@ -41,6 +41,8 @@ export class SSH {
     const cmd = this.generateCommand(instance, key);
     console.log(`Command: ${cmd.join(" ")}`);
 
+    if (this.options.dryRun) return false;
+
     const process = Deno.run({ cmd });
 
     const { success } = await process.status()
