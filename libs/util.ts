@@ -30,7 +30,10 @@ export const isExecutable = async (executable: string): Promise<boolean> => {
   const cmd = ["which", executable];
   const process = Deno.run({ cmd, stdout: "null" });
 
-  const { success } = await process.status();
+  const { success } = await process.status()
+    .catch(() => ({ success: false }));
+
+  Deno.close(process.rid);
 
   return success;
 };

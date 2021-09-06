@@ -1,5 +1,6 @@
 import { createHash } from "https://deno.land/std@0.101.0/hash/mod.ts";
 import {
+  basename,
   join,
   parse,
   resolve,
@@ -12,12 +13,7 @@ import {
   KeyCache,
   SSHOptions,
 } from "./types.ts";
-import {
-  getCacheDirectory,
-  isExecutable,
-  readYamlSafe,
-  writeYaml,
-} from "./util.ts";
+import { getCacheDirectory, readYamlSafe, writeYaml } from "./util.ts";
 
 export class Keys {
   config: Configuration;
@@ -92,35 +88,24 @@ export class Keys {
     const { keysDirectory } = this.config;
     const files = Deno.readDir(keysDirectory);
 
-    const keygenExists = await isExecutable("ssh-keygen");
-    const check = keygenExists ? this.isFileKey : async (_: string) => true;
-
     const keys: Key[] = [];
     for await (const { name } of files) {
       const fullpath = join(keysDirectory, name);
-      const isKey = await check(fullpath);
 
-      if (isKey) {
-        const key = await this.format(fullpath);
-
-        keys.push(key);
-      }
+      const key = await this.format(fullpath);
+      keys.push(key);
     }
 
     return keys;
   }
 
   async format(path: string): Promise<Key> {
-    const { name } = parse(path);
-    const hash = await this.hash(path);
-
-    if (!hash) {
-      throw new Error(`Key file ${path} doesn't exist`);
-    }
+    const name = basename(path);
+    const hash = await this.hash(path) as string;
 
     return {
       name,
-      location: resolve(path),
+      location: path,
       hash,
     };
   }
@@ -131,22 +116,6 @@ export class Keys {
     const hash = createHash("md5");
 
     return contents ? hash.update(contents).toString() : null;
-  }
-
-  async isFileKey(path: string) {
-    const process = Deno.run({
-      cmd: ["ssh-keygen", "-l", "-f", path],
-      stdout: "null",
-      stderr: "null",
-      stdin: "null",
-    });
-
-    const { success } = await process.status()
-      .catch(() => ({ success: false }));
-
-    Deno.close(process.rid);
-
-    return success;
   }
 
   async checkCache(instance: FormattedInstance): Promise<Key | null> {
