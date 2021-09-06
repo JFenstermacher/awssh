@@ -1,4 +1,4 @@
-import { basename, resolve } from "https://deno.land/std@0.101.0/path/mod.ts";
+import { basename } from "https://deno.land/std@0.101.0/path/mod.ts";
 import { Instances } from "./instances.ts";
 import { Keys } from "./keys.ts";
 import {
@@ -169,7 +169,9 @@ export class SSH {
       const mapping = {
         [ConnectionTypes.PRIVATE]: instance.PrivateIpAddress,
         [ConnectionTypes.PUBLIC]: instance.PublicIpAddress,
-        [ConnectionTypes.SSM]: instance.InstanceId,
+        [ConnectionTypes.SSM]: instance.SSMEnabled
+          ? instance.InstanceId
+          : undefined,
       };
 
       res[connType] = mapping[connType];
