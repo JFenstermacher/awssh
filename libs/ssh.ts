@@ -21,15 +21,42 @@ export class SSH {
     this.keys = new Keys(config, options);
   }
 
+  async getInstances() {
+    return this.instances.get();
+  }
+
+  async promptInstances(instances: FormattedInstance[]) {
+    return this.instances.prompt(instances);
+  }
+
+  async getKeys() {
+    return this.keys.get();
+  }
+
+  async promptKey(instance: FormattedInstance, keys: Key[]) {
+    return this.keys.prompt(instance, keys);
+  }
+
   async run(instance: FormattedInstance, key: Key) {
     const cmd = this.generateCommand(instance, key);
-    console.log(`Command: ${cmd}`);
+    console.log(`Command: ${cmd.join(" ")}`);
 
     const process = Deno.run({ cmd });
 
-    const { success } = await process.status();
+    const { success } = await process.status()
+      .catch(() => ({ success: false }));
+
+    Deno.close(process.rid);
 
     return success;
+  }
+
+  async saveInstances(instances: FormattedInstance[]) {
+    return this.instances.save(instances);
+  }
+
+  async saveKey(instance: FormattedInstance, key: Key) {
+    return this.keys.save(instance.InstanceId as string, key);
   }
 
   generateCommand(instance: FormattedInstance, key: Key) {
@@ -40,6 +67,8 @@ export class SSH {
     const command = [
       this.config.baseCommand,
       ...options,
+      "-i",
+      key.location,
       "-l",
       this.options.loginName,
       "-p",

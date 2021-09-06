@@ -1,23 +1,27 @@
 import { Command } from "https://deno.land/x/cliffy@v0.19.5/command/mod.ts";
 import { SSHOptions } from "../libs/types.ts";
-import { Instances } from "../libs/instances.ts";
-import { Keys } from "../libs/keys.ts";
 import { Configuration } from "../libs/config.ts";
+import { SSH } from "../libs/ssh.ts";
 
 export const sshAction = async (options: SSHOptions) => {
   const config = await Configuration.get();
 
-  const instanceObj = new Instances(config, options);
-  const keyObj = new Keys(config, options);
+  const ssh = new SSH(config, options);
 
-  const instances = await instanceObj.get();
-  const instance = await instanceObj.prompt(instances);
+  const instances = await ssh.getInstances();
+  const instance = await ssh.promptInstances(instances);
 
-  const keys = await keyObj.get();
-  const key = await keyObj.prompt(instance, keys);
+  const keys = await ssh.getKeys();
+  const key = await ssh.promptKey(instance, keys);
 
-  console.log(instance);
-  console.log(key);
+  const succesful = await ssh.run(instance, key);
+
+  if (succesful) {
+    await Promise.all([
+      ssh.saveInstances(instances),
+      ssh.saveKey(instance, key),
+    ]);
+  }
 };
 
 export const sshCmd = new Command()
