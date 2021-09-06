@@ -3,7 +3,7 @@ import { SSHOptions } from "../libs/types.ts";
 import { Configuration } from "../libs/config.ts";
 import { SSH } from "../libs/ssh.ts";
 
-export const sshAction = async (options: SSHOptions) => {
+export const ssh = async (options: SSHOptions) => {
   const config = await Configuration.get();
 
   const ssh = new SSH(config, options);
@@ -23,6 +23,14 @@ export const sshAction = async (options: SSHOptions) => {
     ]);
   }
 };
+
+export const sshAction = async (options: SSHOptions) =>
+  ssh(options)
+    .catch((err) => {
+      console.error(err.message);
+
+      Deno.exit();
+    });
 
 export const sshCmd = new Command()
   .name("awssh")

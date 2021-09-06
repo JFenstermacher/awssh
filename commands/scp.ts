@@ -1,13 +1,49 @@
 import { Command } from "https://deno.land/x/cliffy@v0.19.5/command/mod.ts";
+import { Configuration } from "../libs/config.ts";
+import { SSH } from "../libs/ssh.ts";
 import { SSHOptions } from "../libs/types.ts";
+
+export const scp = async (
+  options: SSHOptions,
+  source: string,
+  destination?: string,
+) => {
+  const config = await Configuration.get();
+
+  const scp = new SSH(config, options);
+
+  const [sourceFile, destinationFile] = await scp.verifyPaths(
+    source,
+    destination,
+  );
+
+  const instances = await scp.getInstances();
+  const instance = await scp.promptInstances(instances);
+
+  const keys = await scp.getKeys();
+  const key = await scp.promptKey(instance, keys);
+
+  const succesful = await scp.copy(instance, key, sourceFile, destinationFile);
+
+  if (succesful) {
+    await Promise.all([
+      scp.saveInstances(instances),
+      scp.saveKey(instance, key),
+    ]);
+  }
+};
 
 export const scpAction = async (
   options: SSHOptions,
   source: string,
   destination?: string,
-) => {
-  console.log(options, source, destination);
-};
+) =>
+  scp(options, source, destination)
+    .catch((err) => {
+      console.error(err.message);
+
+      Deno.exit();
+    });
 
 export const scpCmd = new Command()
   .description("Use SCP to transfer a file")

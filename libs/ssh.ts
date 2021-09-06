@@ -41,9 +41,27 @@ export class SSH {
 
   async run(instance: FormattedInstance, key: Key) {
     const cmd = this.generateSSHCommand(instance, key);
+    const success = await this.runCmd(cmd, this.options.dryRun);
+
+    return success;
+  }
+
+  async copy(
+    instance: FormattedInstance,
+    key: Key,
+    source: SCPFile,
+    destination: SCPFile,
+  ) {
+    const cmd = this.generateSCPCommand(instance, key, source, destination);
+    const success = await this.runCmd(cmd, this.options.dryRun);
+
+    return success;
+  }
+
+  async runCmd(cmd: string[], dryRun?: boolean) {
     console.log(`Command: ${cmd.join(" ")}`);
 
-    if (this.options.dryRun) return false;
+    if (dryRun) return false;
 
     const process = Deno.run({ cmd });
 
@@ -79,7 +97,7 @@ export class SSH {
       "-p",
       this.options.port,
       hostname,
-    ] as string[];
+    ].filter((el) => el) as string[];
 
     return command;
   }
@@ -155,11 +173,11 @@ export class SSH {
       ...options,
       "-i",
       key.location,
-      "-p",
+      "-P",
       this.options.port,
       generatePathValue(source),
       generatePathValue(destination),
-    ] as string[];
+    ].filter((el) => el) as string[];
 
     return command;
   }
