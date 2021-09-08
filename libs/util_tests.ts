@@ -1,6 +1,6 @@
 import { v1 } from "https://deno.land/std@0.106.0/uuid/mod.ts";
 import { assertEquals } from "https://deno.land/std@0.106.0/testing/asserts.ts";
-import * as util from "../libs/util.ts";
+import * as util from "./util.ts";
 import { join } from "https://deno.land/std@0.106.0/path/mod.ts";
 
 Deno.test("YAML: Reading non-existent path returns null", async () => {

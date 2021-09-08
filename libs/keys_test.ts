@@ -4,7 +4,7 @@ import { assertEquals } from "https://deno.land/std@0.106.0/testing/asserts.ts";
 import { Configuration } from "../libs/config.ts";
 import { Keys } from "../libs/keys.ts";
 import { FormattedInstance, Key } from "../libs/types.ts";
-import { checkFileExists } from "./utilities.ts";
+import { checkFileExists } from "./util.ts";
 
 const INDEX_FILE = join(Deno.cwd(), "index.ts");
 
@@ -42,7 +42,7 @@ const TEST_INSTANCE: FormattedInstance = {
 };
 
 Deno.test("Can write, check, and wipe cache", async () => {
-  const cacheDir = join(Deno.cwd(), "tests", "keycache");
+  const cacheDir = join(Deno.cwd(), "libs", "keycache");
   const { env } = Deno;
 
   env.set("XDG_CACHE_HOME", cacheDir);
@@ -77,7 +77,7 @@ Deno.test("Can write, check, and wipe cache", async () => {
 });
 
 Deno.test("Can list keys", async () => {
-  const keysDirectory = join(Deno.cwd(), "tests", "testKeysDir");
+  const keysDirectory = join(Deno.cwd(), "libs", "testKeysDir");
   await Deno.mkdir(keysDirectory, { recursive: true });
 
   const expected = [1, 2, 3].map((el) => `test-key-${el}.pem`);

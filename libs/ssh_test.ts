@@ -3,9 +3,9 @@ import {
   assertEquals,
   assertThrowsAsync,
 } from "https://deno.land/std@0.101.0/testing/asserts.ts";
-import { Configuration } from "../libs/config.ts";
-import { SSH } from "../libs/ssh.ts";
-import { ConnectionTypes, FormattedInstance, SCPFile } from "../libs/types.ts";
+import { Configuration } from "./config.ts";
+import { SSH } from "./ssh.ts";
+import { ConnectionTypes, FormattedInstance, SCPFile } from "./types.ts";
 
 const TEST_INSTANCE: FormattedInstance = {
   ImageId: "ami-123",
@@ -34,7 +34,6 @@ Deno.test("SSH: Basic command generation tested", async () => {
 
   const expected = [
     "ssh",
-    "",
     "-i",
     TEST_KEY.location,
     "-l",
@@ -186,10 +185,9 @@ Deno.test("SCP: Source is remote, destination not given, and basename exists in 
 Deno.test("SCP: Source is remote, destination not given, and basename doesn't exist", async () => {
   const ssh = new SSH(Configuration.defaults, {});
 
-  Deno.chdir("tests");
+  Deno.chdir("libs");
 
   const remotePath = "/tmp/awsshtest/index.ts";
-
   const scpFiles = await ssh.verifyPaths(remotePath);
 
   const expected: [SCPFile, SCPFile] = [
@@ -225,7 +223,7 @@ Deno.test("SCP: Source is remote, destination given, but exists", async () => {
 Deno.test("SCP: Source is remote, destination given", async () => {
   const ssh = new SSH(Configuration.defaults, {});
 
-  Deno.chdir("tests");
+  Deno.chdir("libs");
 
   const remotePath = "/tmp/awsshtest/index.ts";
 

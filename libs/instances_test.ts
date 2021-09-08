@@ -7,7 +7,7 @@ import { Configuration } from "../libs/config.ts";
 import { Instances } from "../libs/instances.ts";
 import { FormattedInstance, InstanceMap } from "../libs/types.ts";
 import { readYamlSafe } from "../libs/util.ts";
-import { checkFileExists } from "./utilities.ts";
+import { checkFileExists } from "./util.ts";
 
 const UNFORMATTED_INSTANCE: Instance = {
   ImageId: "ami-123",
@@ -144,7 +144,7 @@ Deno.test("Can prompt for an instance", async () => {
 });
 
 Deno.test("Cache can be written and wiped", async () => {
-  const cacheDir = join(Deno.cwd(), "tests", "cache");
+  const cacheDir = join(Deno.cwd(), "libs", "cache");
   Deno.env.set("XDG_CACHE_HOME", cacheDir);
 
   const instancesClass = new Instances(Configuration.defaults, {});
