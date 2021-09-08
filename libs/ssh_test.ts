@@ -7,6 +7,10 @@ import { Configuration } from "./config.ts";
 import { SSH } from "./ssh.ts";
 import { ConnectionTypes, FormattedInstance, SCPFile } from "./types.ts";
 
+const __dirname = new URL(".", import.meta.url).pathname;
+
+const INDEX_FILE = join(__dirname, "..", "index.ts");
+
 const TEST_INSTANCE: FormattedInstance = {
   ImageId: "ami-123",
   InstanceId: "i-abc",
@@ -23,7 +27,7 @@ const TEST_INSTANCE: FormattedInstance = {
 
 const TEST_KEY = {
   name: "test-key-1",
-  location: join(Deno.cwd(), "test-key-1.pem"),
+  location: join(__dirname, "..", "test-key-1.pem"),
   hash: "test-hash",
 };
 
@@ -138,10 +142,8 @@ Deno.test("SSH: last option will be returned if first two are undefined", async 
 Deno.test("SCP: Source is local, and destination is not given", async () => {
   const ssh = new SSH(Configuration.defaults, {});
 
-  const indexFile = join(Deno.cwd(), "index.ts");
-
   assertThrowsAsync(
-    async () => ssh.verifyPaths(indexFile),
+    async () => ssh.verifyPaths(INDEX_FILE),
     Error,
     "Must specify a remote destination",
   );
@@ -150,15 +152,14 @@ Deno.test("SCP: Source is local, and destination is not given", async () => {
 Deno.test("SCP: Source is local, destination given, and is file", async () => {
   const ssh = new SSH(Configuration.defaults, {});
 
-  const indexFile = join(Deno.cwd(), "index.ts");
   const remotePath = "/tmp/awsshtest/index.ts";
 
-  const scpFiles = await ssh.verifyPaths(indexFile, remotePath);
+  const scpFiles = await ssh.verifyPaths(INDEX_FILE, remotePath);
 
   const expected: [SCPFile, SCPFile] = [
     {
       directory: false,
-      path: indexFile,
+      path: INDEX_FILE,
       remote: false,
     },
     {
@@ -210,11 +211,10 @@ Deno.test("SCP: Source is remote, destination not given, and basename doesn't ex
 Deno.test("SCP: Source is remote, destination given, but exists", async () => {
   const ssh = new SSH(Configuration.defaults, {});
 
-  const indexFile = join(Deno.cwd(), "index.ts");
   const remotePath = "/tmp/awsshtest/index.ts";
 
   assertThrowsAsync(
-    async () => ssh.verifyPaths(remotePath, indexFile),
+    async () => ssh.verifyPaths(remotePath, INDEX_FILE),
     Error,
     "Destination already exists",
   );

@@ -6,23 +6,25 @@ import { Keys } from "../libs/keys.ts";
 import { FormattedInstance, Key } from "../libs/types.ts";
 import { checkFileExists } from "./util.ts";
 
-const INDEX_FILE = join(Deno.cwd(), "index.ts");
+const __dirname = new URL(".", import.meta.url).pathname;
+
+const INDEX_FILE = join(__dirname, "..", "index.ts");
 
 const TEST_KEYS: Key[] = [
   {
     name: "test-key",
-    location: join(Deno.cwd(), "index.ts"),
+    location: INDEX_FILE,
     hash: await Deno.readTextFile(INDEX_FILE)
       .then((data) => createHash("md5").update(data).toString()),
   },
   {
     name: "test-key-1",
-    location: join(Deno.cwd(), "test-key-1.pem"),
+    location: join(__dirname, "..", "test-key-1.pem"),
     hash: "test-hash",
   },
   {
     name: "test-key-2",
-    location: join(Deno.cwd(), "test-key-2.pem"),
+    location: join(__dirname, "..", "test-key-2.pem"),
     hash: "test-hash",
   },
 ];
@@ -42,7 +44,7 @@ const TEST_INSTANCE: FormattedInstance = {
 };
 
 Deno.test("Can write, check, and wipe cache", async () => {
-  const cacheDir = join(Deno.cwd(), "libs", "keycache");
+  const cacheDir = join(__dirname, "keycache");
   const { env } = Deno;
 
   env.set("XDG_CACHE_HOME", cacheDir);
@@ -77,7 +79,7 @@ Deno.test("Can write, check, and wipe cache", async () => {
 });
 
 Deno.test("Can list keys", async () => {
-  const keysDirectory = join(Deno.cwd(), "libs", "testKeysDir");
+  const keysDirectory = join(__dirname, "testKeysDir");
   await Deno.mkdir(keysDirectory, { recursive: true });
 
   const expected = [1, 2, 3].map((el) => `test-key-${el}.pem`);
@@ -115,15 +117,13 @@ Deno.test("Can detect key by name", () => {
 Deno.test("Can format a key file", async () => {
   const keysClass = new Keys(Configuration.defaults, {});
 
-  const indexFile = join(Deno.cwd(), "index.ts");
-
   const expected: Key = {
-    name: basename(indexFile),
-    location: indexFile,
-    hash: await keysClass.hash(indexFile) as string,
+    name: basename(INDEX_FILE),
+    location: INDEX_FILE,
+    hash: await keysClass.hash(INDEX_FILE) as string,
   };
 
-  const result = await keysClass.format(indexFile);
+  const result = await keysClass.format(INDEX_FILE);
 
   assertEquals(result, expected);
 });
