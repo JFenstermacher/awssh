@@ -71,8 +71,8 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_instance" "test" {
-  count = 3
+resource "aws_instance" "pub_test" {
+  count = 2
 
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t2.micro"
@@ -81,6 +81,31 @@ resource "aws_instance" "test" {
   vpc_security_group_ids      = [aws_security_group.test.id]
 
   tags = {
-    Name = "prefix-${count.index}"
+    Name = "${local.prefix}-pub-${count.index}"
+  }
+}
+
+resource "aws_instance" "priv_test" {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = "t2.micro"
+  key_name               = aws_key_pair.test.key_name
+  vpc_security_group_ids = [aws_security_group.test.id]
+
+  tags = {
+    Name = "${local.prefix}-priv-${count.index}"
+  }
+}
+
+resource "aws_instance" "ssm_test" {
+  count = 2
+
+  ami                         = data.aws_ami.amazon_linux.id
+  instance_type               = "t2.micro"
+  associate_public_ip_address = true
+  key_name                    = aws_key_pair.test.key_name
+  vpc_security_group_ids      = [aws_security_group.test.id]
+
+  tags = {
+    Name = "${local.prefix}-ssm-${count.index}"
   }
 }
