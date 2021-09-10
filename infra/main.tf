@@ -11,12 +11,17 @@ terraform {
   }
 }
 
-provider "aws" {}
+provider "aws" {
+  region = local.region
+}
 provider "tls" {}
 
 locals {
+  region = "us-east-1"
   prefix = "awssh-test"
 }
+
+data "aws_caller_identity" "current" {}
 
 data "http" "ip" {
   url = "http://icanhazip.com"
@@ -92,8 +97,36 @@ resource "aws_instance" "priv_test" {
   vpc_security_group_ids = [aws_security_group.test.id]
 
   tags = {
-    Name = "${local.prefix}-priv-${count.index}"
+    Name = "${local.prefix}-priv"
   }
+}
+
+resource "aws_iam_role" "ssm_role" {
+  name_prefix = "${local.prefix}-ssm-role"
+  path        = "/"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Effect = "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "ssm_profile" {
+  name_prefix = "${local.prefix}-ssm-instance-profile"
+  role        = aws_iam_role.ssm_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_policy" {
+  role       = aws_iam_role.ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_instance" "ssm_test" {
@@ -104,6 +137,7 @@ resource "aws_instance" "ssm_test" {
   associate_public_ip_address = true
   key_name                    = aws_key_pair.test.key_name
   vpc_security_group_ids      = [aws_security_group.test.id]
+  iam_instance_profile        = aws_iam_instance_profile.ssm_profile.name
 
   tags = {
     Name = "${local.prefix}-ssm-${count.index}"
