@@ -249,7 +249,7 @@ export class Instances {
       const pubFilter = this.options.pub && !instance.PublicIpAddress;
       const ssmFilter = this.options.ssm && !instance.SSMEnabled;
 
-      if (pubFilter && ssmFilter) continue;
+      if (pubFilter || ssmFilter) continue;
 
       const color = instance.State === "running" ? green : red;
       const instanceKey = this.renderTemplateString(instance);
