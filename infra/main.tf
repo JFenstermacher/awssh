@@ -90,18 +90,6 @@ resource "aws_instance" "pub_test" {
   }
 }
 
-resource "aws_instance" "priv_test" {
-  ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = "t2.micro"
-  associate_public_ip_address = false
-  key_name                    = aws_key_pair.test.key_name
-  vpc_security_group_ids      = [aws_security_group.test.id]
-
-  tags = {
-    Name = "${local.prefix}-priv"
-  }
-}
-
 resource "aws_iam_role" "ssm_role" {
   name_prefix = "${local.prefix}-ssm-role"
   path        = "/"
