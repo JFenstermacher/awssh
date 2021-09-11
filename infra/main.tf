@@ -48,7 +48,7 @@ resource "tls_private_key" "ssh" {
 
 resource "local_file" "private_key" {
   content         = tls_private_key.ssh.private_key_pem
-  filename        = "${local.prefix}.pem"
+  filename        = "${aws_key_pair.test.key_name}.pem"
   file_permission = "0600"
 }
 
