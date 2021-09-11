@@ -76,7 +76,7 @@ export class Configuration {
       "Connection Priority": Configuration.configureConnection,
       "Instance List Template": Configuration.configureTemplate,
       "Keys Home Directory": Configuration.configureKeysHome,
-      "Offline Cache Configuration": Configuration.configureCache,
+      "Cache Configuration": Configuration.configureCache,
       "Username": Configuration.configureUsername,
       "Reset Defaults": async (_) => Configuration.defaults,
       "Wipe Cache": Configuration.wipeCache,
@@ -178,7 +178,7 @@ export class Configuration {
 
   static async configureCache(config: ConfigurationData) {
     const cacheMode = await Select.prompt({
-      message: "How should offline cache be configured",
+      message: "How should cache be configured",
       options: Object.values(OfflineCacheModes),
     }) as OfflineCacheModes;
 

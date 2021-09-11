@@ -5,6 +5,7 @@ export enum ConnectionTypes {
   PRIVATE = "private",
   SSM = "ssm",
 }
+
 export enum OfflineCacheModes {
   AUTO = "auto",
   PROMPT = "prompt",
