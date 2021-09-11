@@ -66,3 +66,11 @@ export const checkFileExists = async (filepath: string) =>
     .stat(filepath)
     .then(() => true)
     .catch(() => false);
+
+export const throwErrorMessages = (messages: string[]) => {
+  const message = messages
+    .map((msg) => `[ERROR] ${msg}`)
+    .join("\n");
+
+  throw new Error(message);
+};

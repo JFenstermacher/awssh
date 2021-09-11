@@ -1,6 +1,6 @@
 import { Command } from "https://deno.land/x/cliffy@v0.19.5/command/mod.ts";
 import { Configuration } from "../libs/config.ts";
-import { SSH } from "../libs/ssh.ts";
+import { SCP } from "../libs/scp.ts";
 import { SSHOptions } from "../libs/types.ts";
 
 export const scp = async (
@@ -10,25 +10,26 @@ export const scp = async (
 ) => {
   const config = await Configuration.get();
 
-  const scp = new SSH(config, options);
+  const scp = new SCP(config, options);
+  scp.validate();
 
   const [sourceFile, destinationFile] = await scp.verifyPaths(
     source,
     destination,
   );
 
-  const instances = await scp.getInstances();
-  const instance = await scp.promptInstances(instances);
+  const instances = await scp.instances.get();
+  const instance = await scp.instances.prompt(instances);
 
-  const keys = await scp.getKeys();
-  const key = await scp.promptKey(instance, keys);
+  const keys = await scp.keys.get();
+  const key = await scp.keys.prompt(instance, keys);
 
   const succesful = await scp.copy(instance, key, sourceFile, destinationFile);
 
   if (succesful) {
     await Promise.all([
-      scp.saveInstances(instances),
-      scp.saveKey(instance, key),
+      scp.instances.save(instances),
+      scp.keys.save(instance, key),
     ]);
   }
 };

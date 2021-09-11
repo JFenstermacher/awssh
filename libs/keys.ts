@@ -3,7 +3,6 @@ import {
   basename,
   join,
   parse,
-  resolve,
 } from "https://deno.land/std@0.101.0/node/path.ts";
 import { Select } from "https://deno.land/x/cliffy@v0.19.5/prompt/select.ts";
 import {
@@ -71,8 +70,8 @@ export class Keys {
     return (keys ?? {}) as KeyCache;
   }
 
-  async save(instanceId: string, key: Key) {
-    this.cache[instanceId] = key;
+  async save(instance: FormattedInstance, key: Key) {
+    this.cache[instance.InstanceId as string] = key;
 
     await writeYaml(this.cachePath, this.cache);
   }

@@ -51,15 +51,14 @@ Deno.test("Can write, check, and wipe cache", async () => {
   const keysClass = new Keys(Configuration.defaults, {});
 
   // Saving Key
-  const instanceId = "i-abc";
-  await keysClass.save(instanceId, TEST_KEYS[0]);
+  await keysClass.save(TEST_INSTANCE, TEST_KEYS[0]);
 
   const cachePath = join(cacheDir, "awssh", "keys.yaml");
   const exists = await checkFileExists(cachePath);
   assertEquals(exists, true);
 
   const expected = {
-    [instanceId]: TEST_KEYS[0],
+    [TEST_INSTANCE.InstanceId as string]: TEST_KEYS[0],
   };
 
   let cache = await keysClass.read();

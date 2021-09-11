@@ -7,19 +7,20 @@ export const ssh = async (options: SSHOptions) => {
   const config = await Configuration.get();
 
   const ssh = new SSH(config, options);
+  ssh.validate();
 
-  const instances = await ssh.getInstances();
-  const instance = await ssh.promptInstances(instances);
+  const instances = await ssh.instances.get();
+  const instance = await ssh.instances.prompt(instances);
 
-  const keys = await ssh.getKeys();
-  const key = await ssh.promptKey(instance, keys);
+  const keys = await ssh.keys.get();
+  const key = await ssh.keys.prompt(instance, keys);
 
   const succesful = await ssh.run(instance, key);
 
   if (succesful) {
     await Promise.all([
-      ssh.saveInstances(instances),
-      ssh.saveKey(instance, key),
+      ssh.instances.save(instances),
+      ssh.keys.save(instance, key),
     ]);
   }
 };
