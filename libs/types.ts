@@ -53,6 +53,19 @@ export type FormattedInstance = {
   Tags?: { [key: string]: string };
 };
 
+export const FormattedInstanceKeys = [
+  "ImageId",
+  "InstanceId",
+  "InstanceType",
+  "KeyName",
+  "PrivateIpAddress",
+  "PublicIpAddress",
+  "SubnetId",
+  "VpcId",
+  "State",
+  "Tags.<Key>",
+];
+
 export enum CacheTypes {
   Instances = "instances",
   Keys = "keys",

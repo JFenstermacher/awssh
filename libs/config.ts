@@ -15,6 +15,7 @@ import {
   CacheTypes,
   Configuration as ConfigurationData,
   ConnectionTypes,
+  FormattedInstanceKeys,
   OfflineCacheModes,
 } from "./types.ts";
 
@@ -125,6 +126,26 @@ export class Configuration {
   static async configureTemplate(config: ConfigurationData) {
     const templateString = await Input.prompt({
       message: "Set the instance output string template",
+      default: config.templateString,
+      validate: (template: string) => {
+        const regex = /\$\{([^{}]+)\}/g;
+
+        const matches = template.matchAll(regex);
+
+        let errorMsg = "";
+        for (const [_, key] of matches) {
+          if (key.startsWith("Tags") && key !== "Tags") continue;
+
+          if (!FormattedInstanceKeys.includes(key)) {
+            errorMsg = [
+              `Passed key, ${key}, is not a viable template parameter`,
+              `Possible values: [${FormattedInstanceKeys.join(", ")}]`,
+            ].join("\n");
+          }
+        }
+
+        return errorMsg.length ? errorMsg : true;
+      },
     });
 
     config.templateString = templateString;
