@@ -23,7 +23,12 @@ import {
   OfflineCacheModes,
   SSHOptions,
 } from "./types.ts";
-import { getCacheDirectory, readYamlSafe, writeYaml } from "./util.ts";
+import {
+  getCacheDirectory,
+  readYamlSafe,
+  throwErrorMessages,
+  writeYaml,
+} from "./util.ts";
 import { join } from "https://deno.land/std@0.101.0/node/path.ts";
 
 export class Instances {
@@ -104,7 +109,7 @@ export class Instances {
     const options = Object.keys(instanceMap);
 
     if (!options.length) {
-      throw new Error("No instances available");
+      throwErrorMessages(["No instances available"]);
     }
 
     const instanceKey = await Select.prompt({
