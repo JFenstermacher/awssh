@@ -3,12 +3,12 @@ module github.com/JFenstermacher/awssh
 go 1.17
 
 require (
+	github.com/aws/aws-sdk-go v1.41.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.41.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
