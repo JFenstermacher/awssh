@@ -18,30 +18,28 @@ package cmd
 import (
 	"fmt"
 	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/viper"
+
+	"github.com/JFenstermacher/awssh/pkg/instances"
+	"github.com/JFenstermacher/awssh/pkg/utils"
 )
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "awssh",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Short: "SSH into EC2",
+	Long:  `Prompts for EC2 instance, and key if not cached. Then, SSH into an instance.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		session := instances.GetSession("", "")
+		instances := instances.GetInstances(session, true)
+		fmt.Println(instances)
+	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
 }
@@ -49,15 +47,34 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
+	// Global Flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.awssh.yaml)")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Local Command Flag
+	rootCmd.Flags().StringP("identityFile", "i", "", "Identity file required for log into instance")
+	rootCmd.Flags().StringSliceP("option", "o", []string{}, "SSH options")
+
+	rootCmd.Flags().IntP("port", "p", 22, "SSH port")
+
+	rootCmd.Flags().BoolP("dryRun", "d", false, "Print command without running")
+	rootCmd.Flags().Bool("ssm", false, "Filters instance and use SSM to connect")
+	rootCmd.Flags().Bool("pub", false, "Filters instances and use Public IP to connect")
+	rootCmd.Flags().Bool("priv", false, "Filters instances and use Private IP to connect")
+
+	rootCmd.Flags().String("profile", "", "AWS Profile")
+	rootCmd.Flags().String("region", "", "AWS Region")
+
+	utils.BindFlags(rootCmd, []string{
+    "dryRun",
+    "identityFile",
+    "option",
+    "port",
+    "ssm",
+    "pub",
+    "priv",
+    "profile",
+    "region",
+  })
 }
 
 // initConfig reads in config file and ENV variables if set.
