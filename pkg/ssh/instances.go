@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"bytes"
+	"errors"
 	"log"
 	"text/template"
 
@@ -82,6 +83,7 @@ func getInstanceLabels(instances []inst.Instance, templateString string) ([]stri
 		}
 
 		key := label.String()
+
 		labels = append(labels, key)
 		mapping[key] = instance
 	}
@@ -105,7 +107,27 @@ func SelectInstance(instances []inst.Instance) inst.Instance {
 		Options: labels,
 	}
 
-	if err := survey.AskOne(prompt, &choice); err != nil {
+	validator := func(val interface{}) error {
+		key, ok := val.(string)
+
+		if !ok {
+			return errors.New("Instance key passed not readable")
+		}
+
+		instance, found := mapping[key]
+
+		if !found {
+			return errors.New("Instance mapped to key passed not found")
+		}
+
+		if instance.State != "Running" {
+			return errors.New("The chosen instance is not running")
+		}
+
+		return nil
+	}
+
+	if err := survey.AskOne(prompt, &choice, survey.WithValidator(validator)); err != nil {
 		log.Fatal(err)
 	}
 
