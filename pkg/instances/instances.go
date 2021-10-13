@@ -70,74 +70,15 @@ func GetInstanceInfoChannel(sess *session.Session) <-chan *ssm.InstanceInformati
 	return c
 }
 
-func GetInstances(sess *session.Session, ssm bool) []Instance {
-	associated := map[string]interface{}{}
-	instances := []Instance{}
-
-	if ssm {
-		infoChan := GetInstanceInfoChannel(sess)
-
-		for info := range infoChan {
-			if *info.AssociationStatus == "Success" {
-				associated[*info.InstanceId] = nil
-			}
-		}
-	}
-
-	instanceChan := GetInstancesChannel(sess)
-
-	for i := range instanceChan {
-		_, found := associated[*i.InstanceId]
-
-		instance := Instance{
-			ImageId:          *i.ImageId,
-			InstanceId:       *i.InstanceId,
-			InstanceType:     *i.InstanceType,
-			KeyName:          *i.KeyName,
-			PrivateIpAddress: *i.PrivateIpAddress,
-			PublicIpAddress:  *i.PublicIpAddress,
-			SubnetId:         *i.SubnetId,
-			VpcId:            *i.VpcId,
-			State:            *i.State.Name,
-			SSMEnabled:       found,
-			Tags:             remapTags(i.Tags),
-		}
-
-		instances = append(instances, instance)
-	}
-
-	return instances
-}
-
-func FilterSSMOnly(instances []Instance) []Instance {
-	filtered := []Instance{}
-
-	for _, instance := range instances {
-		if instance.SSMEnabled {
-			filtered = append(filtered, instance)
-		}
-	}
-
-	return filtered
-}
-
-func FilterPublicOnly(instances []Instance) []Instance {
-	filtered := []Instance{}
-
-	for _, instance := range instances {
-		if instance.PublicIpAddress != "" {
-			filtered = append(filtered, instance)
-		}
-	}
-
-	return filtered
-}
-
-func remapTags(tags []*ec2.Tag) map[string]string {
+func RemapTags(tags []*ec2.Tag) map[string]string {
 	remapped := map[string]string{}
 
 	for _, tag := range tags {
 		remapped[*tag.Key] = *tag.Value
+	}
+
+	if _, found := remapped["Name"]; !found {
+		remapped["Name"] = "No Name"
 	}
 
 	return remapped

@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -35,7 +36,17 @@ var rootCmd = &cobra.Command{
 	Long:  `Prompts for EC2 instance, and key if not cached. Then, SSH into an instance.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		session := instances.GetSession("", "")
-		instances := instances.GetInstances(session, true)
+		instances, err := instances.GetInstances(instances.GetInstancesInput{
+			Session: session,
+			SSM:     true,
+		})
+
+		err = utils.ParseSSHOptions()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		fmt.Println(instances)
 	},
 }
@@ -51,7 +62,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.awssh.yaml)")
 
 	// Local Command Flag
+	rootCmd.Flags().String("profile", "", "AWS Profile")
+	rootCmd.Flags().String("region", "", "AWS Region")
 	rootCmd.Flags().StringP("identityFile", "i", "", "Identity file required for log into instance")
+	rootCmd.Flags().StringP("loginName", "l", "", "Username to use while logging into instance")
 	rootCmd.Flags().StringSliceP("option", "o", []string{}, "SSH options")
 
 	rootCmd.Flags().IntP("port", "p", 22, "SSH port")
@@ -61,20 +75,18 @@ func init() {
 	rootCmd.Flags().Bool("pub", false, "Filters instances and use Public IP to connect")
 	rootCmd.Flags().Bool("priv", false, "Filters instances and use Private IP to connect")
 
-	rootCmd.Flags().String("profile", "", "AWS Profile")
-	rootCmd.Flags().String("region", "", "AWS Region")
-
 	utils.BindFlags(rootCmd, []string{
-    "dryRun",
-    "identityFile",
-    "option",
-    "port",
-    "ssm",
-    "pub",
-    "priv",
-    "profile",
-    "region",
-  })
+		"profile",
+		"region",
+		"dryRun",
+		"identityFile",
+		"loginName",
+		"option",
+		"port",
+		"ssm",
+		"pub",
+		"priv",
+	})
 }
 
 // initConfig reads in config file and ENV variables if set.
