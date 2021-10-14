@@ -131,7 +131,7 @@ func SelectInstance(instances *[]inst.Instance) inst.Instance {
 	return mapping[choice]
 }
 
-func PromptInstance() inst.Instance {
+func PromptInstance() *inst.Instance {
 	profile, region := viper.GetString("profile"), viper.GetString("region")
 	session := inst.GetSession(profile, region)
 
@@ -155,5 +155,7 @@ func PromptInstance() inst.Instance {
 		},
 	})
 
-	return SelectInstance(&instances)
+	instance := SelectInstance(&instances)
+
+	return &instance
 }

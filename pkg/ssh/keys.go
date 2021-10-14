@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/JFenstermacher/awssh/pkg/config"
 	inst "github.com/JFenstermacher/awssh/pkg/instances"
-	"github.com/spf13/viper"
 )
 
 func GetKeys(dir string) []string {
@@ -45,7 +45,7 @@ func SelectKey(instance *inst.Instance, keys []string) string {
 
 	for _, key := range keys {
 		if strings.HasPrefix(key, instance.KeyName) {
-			choice = instance.KeyName
+			choice = key
 			break
 		}
 	}
@@ -64,11 +64,17 @@ func SelectKey(instance *inst.Instance, keys []string) string {
 	return choice
 }
 
-func PromptKey(instance *inst.Instance) string {
-	keysDir := viper.GetString("KeysDirectory")
+func PromptKey(instance *inst.Instance, cache *KeyCache) string {
+	keysDir := config.GetKeysDirectory()
 
 	if keysDir == "" {
-		log.Fatal("Keys Directory is not defined. Reinitialize config.")
+		log.Fatal("Keys Directory is not defined. Reinitialize cli.")
+	}
+
+	path, found := cache.Check(instance.InstanceId)
+
+	if found {
+		return path
 	}
 
 	keys := GetKeys(keysDir)

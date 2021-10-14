@@ -21,9 +21,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/spf13/viper"
-
 	"github.com/JFenstermacher/awssh/pkg/config"
+	"github.com/JFenstermacher/awssh/pkg/ssh"
 	"github.com/JFenstermacher/awssh/pkg/utils"
 )
 
@@ -32,7 +31,15 @@ var rootCmd = &cobra.Command{
 	Short: "SSH into EC2",
 	Long:  `Prompts for EC2 instance, and key if not cached. Then, SSH into an instance.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Called root")
+		cachepath := ssh.GetCachePath()
+		cache := ssh.NewKeyCache(cachepath)
+
+		instance := ssh.PromptInstance()
+		key := ssh.PromptKey(instance, cache)
+
+		fmt.Println(key)
+
+		cache.Save(instance.InstanceId, key)
 	},
 }
 
@@ -77,5 +84,5 @@ func initConfig() {
 	home, err := os.UserHomeDir()
 	cobra.CheckErr(err)
 
-	config.Load(home)
+	config.LoadConfig(home)
 }

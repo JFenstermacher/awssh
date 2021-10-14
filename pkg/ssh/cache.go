@@ -19,6 +19,12 @@ type KeyEntry struct {
 	Hash     string
 }
 
+func GetCachePath() string {
+	home := viper.GetString("HOME")
+
+	return filepath.Join(home, ".awsshgo", "config.yaml")
+}
+
 func NewKeyCache(cachepath string) *KeyCache {
 	cache := viper.New()
 
