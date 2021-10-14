@@ -92,6 +92,12 @@ func getInstanceLabels(instances *[]inst.Instance, templateString string) ([]str
 	return labels, mapping
 }
 
+type Answer struct {
+	Value  string
+	Value2 string
+	Index  int
+}
+
 func SelectInstance(instances *[]inst.Instance) inst.Instance {
 	templateString := config.GetTemplateString()
 
@@ -109,16 +115,12 @@ func SelectInstance(instances *[]inst.Instance) inst.Instance {
 	}
 
 	validator := func(val interface{}) error {
-		key, ok := val.(string)
+		key, _ := val.(survey.OptionAnswer)
 
-		if !ok {
-			return errors.New("Instance key passed not readable")
-		}
+		instance := mapping[key.Value]
 
-		instance := mapping[key]
-
-		if instance.State != "Running" {
-			return errors.New("The chosen instance is not running")
+		if instance.State != "running" {
+			return errors.New("Please choose a running instance")
 		}
 
 		return nil
