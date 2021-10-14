@@ -17,37 +17,22 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/viper"
 
-	"github.com/JFenstermacher/awssh/pkg/instances"
+	"github.com/JFenstermacher/awssh/pkg/config"
 	"github.com/JFenstermacher/awssh/pkg/utils"
 )
-
-var cfgFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "awssh",
 	Short: "SSH into EC2",
 	Long:  `Prompts for EC2 instance, and key if not cached. Then, SSH into an instance.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		session := instances.GetSession("", "")
-		instances, err := instances.GetInstances(instances.GetInstancesInput{
-			Session: session,
-			SSM:     true,
-		})
-
-		err = utils.ParseSSHOptions()
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println(instances)
+		fmt.Println("Called root")
 	},
 }
 
@@ -57,9 +42,6 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// Global Flags
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.awssh.yaml)")
 
 	// Local Command Flag
 	rootCmd.Flags().String("profile", "", "AWS Profile")
@@ -91,24 +73,9 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
+	// Find home directory.
+	home, err := os.UserHomeDir()
+	cobra.CheckErr(err)
 
-		// Search config in home directory with name ".awssh" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".awssh")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	}
+	config.Load(home)
 }

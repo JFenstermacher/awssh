@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/JFenstermacher/awssh/pkg/config"
 	inst "github.com/JFenstermacher/awssh/pkg/instances"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/spf13/viper"
@@ -67,7 +68,7 @@ func GetInstances(input GetInstancesInput) []inst.Instance {
 	return instances
 }
 
-func getInstanceLabels(instances []inst.Instance, templateString string) ([]string, map[string]inst.Instance) {
+func getInstanceLabels(instances *[]inst.Instance, templateString string) ([]string, map[string]inst.Instance) {
 	it, err := template.New("instance").Parse(templateString)
 
 	if err != nil {
@@ -75,7 +76,7 @@ func getInstanceLabels(instances []inst.Instance, templateString string) ([]stri
 	}
 
 	labels, mapping := []string{}, map[string]inst.Instance{}
-	for _, instance := range instances {
+	for _, instance := range *instances {
 		var label bytes.Buffer
 
 		if err := it.Execute(&label, instance); err != nil {
@@ -91,8 +92,8 @@ func getInstanceLabels(instances []inst.Instance, templateString string) ([]stri
 	return labels, mapping
 }
 
-func SelectInstance(instances []inst.Instance) inst.Instance {
-	templateString := viper.GetString("TemplateString")
+func SelectInstance(instances *[]inst.Instance) inst.Instance {
+	templateString := config.GetTemplateString()
 
 	if templateString == "" {
 		log.Fatal("Template String is not defined. Please reinitialize configuration.")
@@ -114,11 +115,7 @@ func SelectInstance(instances []inst.Instance) inst.Instance {
 			return errors.New("Instance key passed not readable")
 		}
 
-		instance, found := mapping[key]
-
-		if !found {
-			return errors.New("Instance mapped to key passed not found")
-		}
+		instance := mapping[key]
 
 		if instance.State != "Running" {
 			return errors.New("The chosen instance is not running")
@@ -138,7 +135,7 @@ func PromptInstance() inst.Instance {
 	profile, region := viper.GetString("profile"), viper.GetString("region")
 	session := inst.GetSession(profile, region)
 
-	ssm := viper.GetBool("SSMEnabled")
+	ssm := config.GetSSMEnabled()
 
 	instances := GetInstances(GetInstancesInput{
 		Session: session,
@@ -158,5 +155,5 @@ func PromptInstance() inst.Instance {
 		},
 	})
 
-	return instances[0]
+	return SelectInstance(&instances)
 }
