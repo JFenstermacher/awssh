@@ -18,11 +18,10 @@ type Configuration struct {
 	TemplateString  string
 }
 
-func Load(home string) {
-	// Search config in home directory with name ".awssh" (without extension).
-	viper.AddConfigPath(home)
+func LoadConfig(home string) {
+	viper.AddConfigPath(filepath.Join(home, ".awsshgo"))
 	viper.SetConfigType("yaml")
-	viper.SetConfigName(".awsshgo")
+	viper.SetConfigName("config")
 
 	viper.AutomaticEnv() // read in environment variables that match
 
@@ -39,7 +38,7 @@ func Load(home string) {
 	}
 }
 
-func Write() {
+func WriteConfig() {
 	viper.WriteConfig()
 }
 
