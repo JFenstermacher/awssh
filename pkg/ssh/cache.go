@@ -3,6 +3,7 @@ package ssh
 import (
 	"fmt"
 	"log"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -73,7 +74,9 @@ func expandPath(keypath string) string {
 		return filepath.Join(home, keypath[1:])
 	}
 
-	path, err := filepath.Abs(keypath)
+	currdir, _ := os.Getwd()
+
+	path, err := filepath.Abs(filepath.Join(currdir, keypath))
 
 	if err != nil {
 		log.Fatal(err)
