@@ -12,7 +12,7 @@ import (
 type Configuration struct {
 	BaseCommand     string
 	ConnectionOrder []string
-	DefaultUser     string
+	DefaultLogin    string
 	KeysDirectory   string
 	SSMEnabled      bool
 	TemplateString  string
@@ -31,7 +31,7 @@ func LoadConfig(home string) {
 	} else {
 		viper.SetDefault("BaseCommand", "ssh")
 		viper.SetDefault("ConnectionOrder", []string{"PUBLIC", "PRIVATE"})
-		viper.SetDefault("DefaultUser", "ec2-user")
+		viper.SetDefault("DefaultLogin", "ec2-user")
 		viper.SetDefault("KeysDirectory", filepath.Join(home, ".ssh"))
 		viper.SetDefault("SSMEnabled", false)
 		viper.SetDefault("TemplateString", "{{ .Tags.Name }} [{{ .InstanceId }}]")
@@ -62,11 +62,11 @@ func GetConnectionOrder() []string {
 	return connections
 }
 
-func GetDefaultUser() string {
-	user := viper.GetString("DefaultUser")
+func GetDefaultLogin() string {
+	user := viper.GetString("DefaultLogin")
 
 	if user == "" {
-		log.Fatal("No configuration found for [DefaultUser]")
+		log.Fatal("No configuration found for [DefaultLogin]")
 	}
 
 	return user
