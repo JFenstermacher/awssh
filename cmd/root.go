@@ -16,10 +16,10 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/JFenstermacher/awssh/pkg/config"
 	"github.com/JFenstermacher/awssh/pkg/ssh"
@@ -35,9 +35,14 @@ var rootCmd = &cobra.Command{
 		cache := ssh.NewKeyCache(cachepath)
 
 		instance := ssh.PromptInstance()
-		key := ssh.PromptKey(instance, cache)
 
-		fmt.Println(key)
+		key := viper.GetString("identityFile")
+
+		if key == "" {
+			key = ssh.PromptKey(instance, cache)
+		}
+
+		ssh.SSH(instance, key)
 
 		cache.Save(instance.InstanceId, key)
 	},

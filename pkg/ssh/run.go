@@ -2,26 +2,28 @@ package ssh
 
 import (
 	"log"
+	"os"
+	"os/exec"
+	"strconv"
+	"strings"
 
 	"github.com/JFenstermacher/awssh/pkg/config"
 	inst "github.com/JFenstermacher/awssh/pkg/instances"
 	"github.com/spf13/viper"
 )
 
-func GetLoginName() string {
+func GetLoginName() []string {
 	loginName := viper.GetString("loginName")
 
-	if loginName != "" {
-		return loginName
+	if loginName == "" {
+		loginName = config.GetDefaultLogin()
 	}
-
-	loginName = config.GetDefaultLogin()
 
 	if loginName == "" {
 		log.Fatal("No login name found. Reinitialize CLI.")
 	}
 
-	return loginName
+	return []string{"-l", loginName}
 }
 
 func GetTarget(instance *inst.Instance) string {
@@ -65,4 +67,50 @@ func GetTarget(instance *inst.Instance) string {
 	}
 
 	return target
+}
+
+func GetPort() []string {
+	port := viper.GetInt("port")
+
+	return []string{"-p", strconv.Itoa(port)}
+}
+
+func GetOptions() []string {
+	opts := viper.GetStringSlice("option")
+
+	options := []string{}
+
+	for _, opt := range opts {
+		options = append(options, "-o", opt)
+	}
+
+	return options
+}
+
+func generateCmd(instance *inst.Instance, key string) (string, []string) {
+	base := viper.GetString("BaseCommand")
+
+	components := GetOptions()
+	components = append(components, "-i", key)
+	components = append(components, GetPort()...)
+	components = append(components, GetLoginName()...)
+	components = append(components, GetTarget(instance))
+
+	log.Println(base, strings.Join(components, " "))
+
+	return base, components
+}
+
+func SSH(instance *inst.Instance, key string) {
+	base, components := generateCmd(instance, key)
+
+	cmd := exec.Command(base, components...)
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

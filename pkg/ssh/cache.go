@@ -5,6 +5,7 @@ import (
 	"log"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/JFenstermacher/awssh/pkg/utils"
 	"github.com/spf13/viper"
@@ -60,6 +61,27 @@ func (kc *KeyCache) Check(id string) (string, bool) {
 	return entry.Location, true
 }
 
+func expandPath(keypath string) string {
+	// Assume this is an absolute path
+	if path.IsAbs(keypath) {
+		return keypath
+	}
+
+	home := viper.GetString("HOME")
+
+	if strings.HasPrefix(keypath, "~") {
+		return filepath.Join(home, keypath[1:])
+	}
+
+	path, err := filepath.Abs(keypath)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return path
+}
+
 func (kc *KeyCache) Save(id string, keypath string) {
 	hash, err := utils.HashFile(keypath)
 
@@ -67,7 +89,7 @@ func (kc *KeyCache) Save(id string, keypath string) {
 		log.Fatal(err)
 	}
 
-	kc.cache.Set(fmt.Sprintf("%s.%s", id, "Location"), keypath)
+	kc.cache.Set(fmt.Sprintf("%s.%s", id, "Location"), expandPath(keypath))
 	kc.cache.Set(fmt.Sprintf("%s.%s", id, "Hash"), hash)
 
 	kc.cache.WriteConfig()
