@@ -95,5 +95,6 @@ func (kc *KeyCache) Save(id string, keypath string) {
 	kc.cache.Set(fmt.Sprintf("%s.%s", id, "Location"), expandPath(keypath))
 	kc.cache.Set(fmt.Sprintf("%s.%s", id, "Hash"), hash)
 
+	// TODO: if directory doesn't exist, saving will fail
 	kc.cache.WriteConfig()
 }

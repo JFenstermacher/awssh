@@ -39,7 +39,10 @@ func LoadConfig(home string) {
 }
 
 func WriteConfig() {
-	viper.WriteConfig()
+	// TODO: if directory doesn't exist, will fail
+	if err := viper.WriteConfig(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func GetBaseCommand() string {
