@@ -18,34 +18,45 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/JFenstermacher/awssh/pkg/ssh"
 	"github.com/spf13/cobra"
 )
 
 // cpCmd represents the cp command
 var cpCmd = &cobra.Command{
 	Use:   "cp",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "SCP file to instance",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("cp called")
+		flags := cmd.Flags()
+
+		cachepath := ssh.GetCachePath()
+		cache := ssh.NewKeyCache(cachepath.Path)
+
+		instance := ssh.PromptInstance(cmd.Flags())
+
+		key, _ := flags.GetString("identityFile")
+
+		if key == "" {
+			key = ssh.PromptKey(instance, cache)
+		}
+
+		fmt.Println(instance, key)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(cpCmd)
 
-	// Here you will define your flags and configuration settings.
+	cpCmd.Flags().String("profile", "", "AWS Profile")
+	cpCmd.Flags().String("region", "", "AWS Region")
+	cpCmd.Flags().StringP("identityFile", "i", "", "identity file required for log into instance")
+	cpCmd.Flags().StringP("loginName", "l", "", "username to use while logging into instance")
+	cpCmd.Flags().StringSliceP("option", "o", []string{}, "SSH options")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// cpCmd.PersistentFlags().String("foo", "", "A help for foo")
+	cpCmd.Flags().IntP("port", "p", 22, "SSH port")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// cpCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	cpCmd.Flags().BoolP("dryRun", "d", false, "print command without running")
+	cpCmd.Flags().Bool("ssm", false, "filters instance and use SSM to connect")
+	cpCmd.Flags().Bool("pub", false, "filters instances and use Public IP to connect")
+	cpCmd.Flags().Bool("priv", false, "filters instances and use Private IP to connect")
 }

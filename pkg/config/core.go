@@ -18,12 +18,36 @@ type Configuration struct {
 	TemplateString  string
 }
 
-func LoadConfig(home string) {
-	viper.AddConfigPath(filepath.Join(home, ".awsshgo"))
-	viper.SetConfigType("yaml")
-	viper.SetConfigName("config")
+type ConfigPath struct {
+	Dir  string
+	Ext  string
+	Name string
+	Path string
+}
+
+func GetConfigPath() *ConfigPath {
+	home := viper.GetString("home")
+
+	dir := filepath.Join(home, ".awsshgo")
+
+	return &ConfigPath{
+		Dir:  dir,
+		Ext:  "yaml",
+		Name: "config",
+		Path: filepath.Join(dir, "config.yaml"),
+	}
+}
+
+func LoadConfig() {
+	configpath := GetConfigPath()
+
+	viper.AddConfigPath(configpath.Dir)
+	viper.SetConfigType(configpath.Ext)
+	viper.SetConfigName(configpath.Name)
 
 	viper.AutomaticEnv() // read in environment variables that match
+
+	home := viper.GetString("home")
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
@@ -39,8 +63,11 @@ func LoadConfig(home string) {
 }
 
 func WriteConfig() {
-	// TODO: if directory doesn't exist, will fail
-	if err := viper.WriteConfig(); err != nil {
+	configpath := GetConfigPath()
+
+	os.Mkdir(configpath.Dir, 0755)
+
+	if err := viper.WriteConfigAs(configpath.Path); err != nil {
 		log.Fatal(err)
 	}
 }

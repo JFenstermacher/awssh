@@ -16,35 +16,41 @@ limitations under the License.
 package cmd
 
 import (
-	"os"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"errors"
 
 	"github.com/JFenstermacher/awssh/pkg/config"
 	"github.com/JFenstermacher/awssh/pkg/ssh"
-	"github.com/JFenstermacher/awssh/pkg/utils"
+	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "awssh",
-	Short: "SSH into EC2",
-	Long:  `Prompts for EC2 instance, and key if not cached. Then, SSH into an instance.`,
+	Short: "SSH into an EC2 instance",
+	Long: `Queries instances based on profile and region.
+The instances are prompted and rendered based on a configurable template string.
+Once an instance is chosen, the private key will either be matched based on prefix or a prompt will appear.
+The keys displayed are based on the configurable keys directory.
+
+Assuming a successful login, on logout the instance and key selection will be saved so no future key prompting will occur.
+  `,
 	Run: func(cmd *cobra.Command, args []string) {
+		flags := cmd.Flags()
+		ssh.ValidateFlags(flags)
+
 		cachepath := ssh.GetCachePath()
-		cache := ssh.NewKeyCache(cachepath)
+		cache := ssh.NewKeyCache(cachepath.Path)
 
-		instance := ssh.PromptInstance()
+		instance := ssh.PromptInstance(cmd.Flags())
 
-		key := viper.GetString("identityFile")
+		key, _ := flags.GetString("identityFile")
 
 		if key == "" {
 			key = ssh.PromptKey(instance, cache)
 		}
 
-		ssh.SSH(instance, key)
+		ssh.SSH(flags, instance, key)
 
-		cache.Save(instance.InstanceId, key)
+		cache.Save(instance, key)
 	},
 }
 
@@ -55,39 +61,22 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Local Command Flag
 	rootCmd.Flags().String("profile", "", "AWS Profile")
 	rootCmd.Flags().String("region", "", "AWS Region")
-	rootCmd.Flags().StringP("identityFile", "i", "", "Identity file required for log into instance")
-	rootCmd.Flags().StringP("loginName", "l", "", "Username to use while logging into instance")
+	rootCmd.Flags().StringP("identityFile", "i", "", "identity file required for log into instance")
+	rootCmd.Flags().StringP("loginName", "l", "", "username to use while logging into instance")
 	rootCmd.Flags().StringSliceP("option", "o", []string{}, "SSH options")
 
 	rootCmd.Flags().IntP("port", "p", 22, "SSH port")
 
-	rootCmd.Flags().BoolP("dryRun", "d", false, "Print command without running")
-	rootCmd.Flags().Bool("ssm", false, "Filters instance and use SSM to connect")
-	rootCmd.Flags().Bool("pub", false, "Filters instances and use Public IP to connect")
-	rootCmd.Flags().Bool("priv", false, "Filters instances and use Private IP to connect")
-
-	utils.BindFlags(rootCmd, []string{
-		"profile",
-		"region",
-		"dryRun",
-		"identityFile",
-		"loginName",
-		"option",
-		"port",
-		"ssm",
-		"pub",
-		"priv",
-	})
+	rootCmd.Flags().BoolP("dryRun", "d", false, "print command without running")
+	rootCmd.Flags().Bool("ssm", false, "filters instance and use SSM to connect")
+	rootCmd.Flags().Bool("pub", false, "filters instances and use Public IP to connect")
+	rootCmd.Flags().Bool("priv", false, "filters instances and use Private IP to connect")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	// Find home directory.
-	home, err := os.UserHomeDir()
-	cobra.CheckErr(err)
-
-	config.LoadConfig(home)
+	cobra.CheckErr(errors.New("Hello"))
+	config.LoadConfig()
 }

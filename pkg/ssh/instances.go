@@ -10,7 +10,7 @@ import (
 	"github.com/JFenstermacher/awssh/pkg/config"
 	inst "github.com/JFenstermacher/awssh/pkg/instances"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/spf13/viper"
+	"github.com/spf13/pflag"
 )
 
 type GetInstancesInput struct {
@@ -19,7 +19,7 @@ type GetInstancesInput struct {
 	Filter  func(instance inst.Instance) bool
 }
 
-func GetInstances(input GetInstancesInput) []inst.Instance {
+func GetInstances(input *GetInstancesInput) []inst.Instance {
 	associated := map[string]interface{}{}
 	instances := []inst.Instance{}
 
@@ -92,12 +92,6 @@ func getInstanceLabels(instances *[]inst.Instance, templateString string) ([]str
 	return labels, mapping
 }
 
-type Answer struct {
-	Value  string
-	Value2 string
-	Index  int
-}
-
 func SelectInstance(instances *[]inst.Instance) inst.Instance {
 	templateString := config.GetTemplateString()
 
@@ -133,17 +127,21 @@ func SelectInstance(instances *[]inst.Instance) inst.Instance {
 	return mapping[choice]
 }
 
-func PromptInstance() *inst.Instance {
-	profile, region := viper.GetString("profile"), viper.GetString("region")
+func PromptInstance(flags *pflag.FlagSet) *inst.Instance {
+	profile, _ := flags.GetString("profile")
+	region, _ := flags.GetString("region")
+
 	session := inst.GetSession(profile, region)
 
 	ssm := config.GetSSMEnabled()
 
-	instances := GetInstances(GetInstancesInput{
+	instances := GetInstances(&GetInstancesInput{
 		Session: session,
-		SSM:     ssm && viper.GetBool("ssm"),
+		SSM:     ssm,
 		Filter: func(instance inst.Instance) bool {
-			ssm, pub := viper.GetBool("ssm"), viper.GetBool("pub")
+
+			ssm, _ := flags.GetBool("ssm")
+			pub, _ := flags.GetBool("pub")
 
 			if ssm {
 				return instance.SSMEnabled

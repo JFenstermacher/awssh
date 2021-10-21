@@ -9,11 +9,12 @@ import (
 
 	"github.com/JFenstermacher/awssh/pkg/config"
 	inst "github.com/JFenstermacher/awssh/pkg/instances"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
-func GetLoginName() []string {
-	loginName := viper.GetString("loginName")
+func GetLoginName(flags *pflag.FlagSet) []string {
+	loginName, _ := flags.GetString("loginName")
 
 	if loginName == "" {
 		loginName = config.GetDefaultLogin()
@@ -26,22 +27,22 @@ func GetLoginName() []string {
 	return []string{"-l", loginName}
 }
 
-func GetTarget(instance *inst.Instance) string {
+func GetTarget(flags *pflag.FlagSet, instance *inst.Instance) string {
 	conns := config.GetConnectionOrder()
 
 	if len(conns) == 0 {
 		log.Fatal("No connections in ConnectionOrder. Reinitialize CLI.")
 	}
 
-	if viper.GetBool("ssm") {
+	if ssm, _ := flags.GetBool("ssm"); ssm {
 		return instance.InstanceId
 	}
 
-	if viper.GetBool("pub") {
+	if pub, _ := flags.GetBool("pub"); pub {
 		return instance.PublicIpAddress
 	}
 
-	if viper.GetBool("priv") {
+	if priv, _ := flags.GetBool("priv"); priv {
 		return instance.PrivateIpAddress
 	}
 
@@ -69,14 +70,14 @@ func GetTarget(instance *inst.Instance) string {
 	return target
 }
 
-func GetPort() []string {
-	port := viper.GetInt("port")
+func GetPort(flags *pflag.FlagSet) []string {
+	port, _ := flags.GetInt("port")
 
 	return []string{"-p", strconv.Itoa(port)}
 }
 
-func GetOptions() []string {
-	opts := viper.GetStringSlice("option")
+func GetOptions(flags *pflag.FlagSet) []string {
+	opts, _ := flags.GetStringSlice("option")
 
 	options := []string{}
 
@@ -87,22 +88,22 @@ func GetOptions() []string {
 	return options
 }
 
-func generateCmd(instance *inst.Instance, key string) (string, []string) {
+func generateCmd(flags *pflag.FlagSet, instance *inst.Instance, key string) (string, []string) {
 	base := viper.GetString("BaseCommand")
 
-	components := GetOptions()
+	components := GetOptions(flags)
 	components = append(components, "-i", key)
-	components = append(components, GetPort()...)
-	components = append(components, GetLoginName()...)
-	components = append(components, GetTarget(instance))
+	components = append(components, GetPort(flags)...)
+	components = append(components, GetLoginName(flags)...)
+	components = append(components, GetTarget(flags, instance))
 
 	log.Println(base, strings.Join(components, " "))
 
 	return base, components
 }
 
-func SSH(instance *inst.Instance, key string) {
-	base, components := generateCmd(instance, key)
+func SSH(flags *pflag.FlagSet, instance *inst.Instance, key string) {
+	base, components := generateCmd(flags, instance, key)
 
 	cmd := exec.Command(base, components...)
 

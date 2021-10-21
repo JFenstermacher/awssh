@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	inst "github.com/JFenstermacher/awssh/pkg/instances"
 	"github.com/JFenstermacher/awssh/pkg/utils"
 	"github.com/spf13/viper"
 )
@@ -21,10 +22,24 @@ type KeyEntry struct {
 	Hash     string
 }
 
-func GetCachePath() string {
+type CachePath struct {
+	Dir  string
+	Ext  string
+	Name string
+	Path string
+}
+
+func GetCachePath() *CachePath {
 	home := viper.GetString("HOME")
 
-	return filepath.Join(home, ".awsshgo", "config.yaml")
+	dir := filepath.Join(home, ".awsshgo")
+
+	return &CachePath{
+		Dir:  dir,
+		Ext:  "yaml",
+		Name: "cache",
+		Path: filepath.Join(dir, "cache.yaml"),
+	}
 }
 
 func NewKeyCache(cachepath string) *KeyCache {
@@ -85,16 +100,19 @@ func expandPath(keypath string) string {
 	return path
 }
 
-func (kc *KeyCache) Save(id string, keypath string) {
+func (kc *KeyCache) Save(instance *inst.Instance, keypath string) {
 	hash, err := utils.HashFile(keypath)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	kc.cache.Set(fmt.Sprintf("%s.%s", id, "Location"), expandPath(keypath))
-	kc.cache.Set(fmt.Sprintf("%s.%s", id, "Hash"), hash)
+	kc.cache.Set(fmt.Sprintf("%s.%s", instance.InstanceId, "Location"), expandPath(keypath))
+	kc.cache.Set(fmt.Sprintf("%s.%s", instance.InstanceId, "Hash"), hash)
 
-	// TODO: if directory doesn't exist, saving will fail
-	kc.cache.WriteConfig()
+	configpath := GetCachePath()
+
+	os.Mkdir(configpath.Dir, 0755)
+
+	kc.cache.WriteConfigAs(configpath.Path)
 }
