@@ -53,9 +53,9 @@ func LoadConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	} else {
-		viper.SetDefault("BaseCommand", "ssh")
+		viper.SetDefault("BaseFlags", "")
 		viper.SetDefault("ConnectionOrder", []string{"PUBLIC", "PRIVATE"})
-		viper.SetDefault("DefaultLogin", "ec2-user")
+		viper.SetDefault("DefaultUser", "ec2-user")
 		viper.SetDefault("KeysDirectory", filepath.Join(home, ".ssh"))
 		viper.SetDefault("SSMEnabled", false)
 		viper.SetDefault("TemplateString", "{{ .Tags.Name }} [{{ .InstanceId }}]")
@@ -72,14 +72,10 @@ func WriteConfig() {
 	}
 }
 
-func GetBaseCommand() string {
-	cmd := viper.GetString("BaseCommand")
+func GetBaseFlags() string {
+	flags := viper.GetString("BaseFlags")
 
-	if cmd == "" {
-		log.Fatal("No Base Command found.")
-	}
-
-	return cmd
+	return flags
 }
 
 func GetConnectionOrder() []string {
@@ -92,11 +88,11 @@ func GetConnectionOrder() []string {
 	return connections
 }
 
-func GetDefaultLogin() string {
-	user := viper.GetString("DefaultLogin")
+func GetDefaultUser() string {
+	user := viper.GetString("DefaultUser")
 
 	if user == "" {
-		log.Fatal("No configuration found for [DefaultLogin]")
+		log.Fatal("No configuration found for [DefaultUser]")
 	}
 
 	return user

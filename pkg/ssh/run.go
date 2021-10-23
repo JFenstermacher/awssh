@@ -17,7 +17,7 @@ func GetLoginName(flags *pflag.FlagSet) []string {
 	loginName, _ := flags.GetString("loginName")
 
 	if loginName == "" {
-		loginName = config.GetDefaultLogin()
+		loginName = config.GetDefaultUser()
 	}
 
 	if loginName == "" {
@@ -88,18 +88,39 @@ func GetOptions(flags *pflag.FlagSet) []string {
 	return options
 }
 
-func generateCmd(flags *pflag.FlagSet, instance *inst.Instance, key string) (string, []string) {
-	base := viper.GetString("BaseCommand")
+func GetBaseFlags() []string {
+	arr := []string{}
 
-	components := GetOptions(flags)
-	components = append(components, "-i", key)
+	flags := viper.GetString("BaseFlags")
+
+	if flags != "" {
+		arr = append(arr, flags)
+	}
+
+	return arr
+}
+
+func GetKey(key string) []string {
+	if key == "" {
+		return []string{}
+	}
+
+	return []string{"-i", key}
+}
+
+func generateCmd(flags *pflag.FlagSet, instance *inst.Instance, key string) (string, []string) {
+	cmd := "ssh"
+
+	components := GetBaseFlags()
+	components = append(components, GetOptions(flags)...)
+	components = append(components, GetKey(key)...)
 	components = append(components, GetPort(flags)...)
 	components = append(components, GetLoginName(flags)...)
 	components = append(components, GetTarget(flags, instance))
 
-	log.Println(base, strings.Join(components, " "))
+	log.Println(cmd, strings.Join(components, " "))
 
-	return base, components
+	return cmd, components
 }
 
 func SSH(flags *pflag.FlagSet, instance *inst.Instance, key string) {

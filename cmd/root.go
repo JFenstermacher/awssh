@@ -16,8 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
-
 	"github.com/JFenstermacher/awssh/pkg/config"
 	"github.com/JFenstermacher/awssh/pkg/ssh"
 	"github.com/spf13/cobra"
@@ -77,6 +75,5 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	cobra.CheckErr(errors.New("Hello"))
 	config.LoadConfig()
 }
