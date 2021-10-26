@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/spf13/viper"
@@ -60,13 +61,13 @@ func SetDefaults(reset bool) {
 }
 
 func LoadConfig() {
+	viper.AutomaticEnv() // read in environment variables that match
+
 	configpath := GetConfigPath()
 
 	viper.AddConfigPath(configpath.Dir)
 	viper.SetConfigType(configpath.Ext)
 	viper.SetConfigName(configpath.Name)
-
-	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
@@ -124,6 +125,18 @@ func GetKeysDirectory() string {
 
 func GetSSMEnabled() bool {
 	return viper.GetBool("SSMEnabled")
+}
+
+func IsSSMPossible() bool {
+	base, args := "session-manager-plugin", []string{"--version"}
+
+	cmd := exec.Command(base, args...)
+
+	if err := cmd.Run(); err != nil {
+		return false
+	}
+
+	return true
 }
 
 func GetTemplateString() string {

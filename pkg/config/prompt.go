@@ -22,19 +22,22 @@ func getPromptKeys(m map[string]func()) []string {
 
 func PromptChoice() {
 	choices := map[string]func(){
-		"Configure Base Command Flags": promptBaseFlags,
-		"Configure Default EC2 User":   promptDefaultUser,
-		"Configure SSH Keys Directory": promptKeysDirectory,
-		"Configure Connection Order":   promptConnectionOrder,
-		"Configure SSM Proxying":       promptSSM,
-		"Configure Template String":    promptTemplate,
-		"Reset Defaults":               resetDefaults,
+		"Base Command Flags": promptBaseFlags,
+		"Default EC2 User":   promptDefaultUser,
+		"SSH Keys Directory": promptKeysDirectory,
+		"Connection Order":   promptConnectionOrder,
+		"Template String":    promptTemplate,
+		"Reset Defaults":     resetDefaults,
+	}
+
+	if IsSSMPossible() {
+		choices["Toggle SSM Proxying"] = promptSSM
 	}
 
 	options := getPromptKeys(choices)
 
 	prompt := &survey.Select{
-		Message: "Choose an item to cofigure",
+		Message: "Choose an item to configure",
 		Options: options,
 	}
 
@@ -129,6 +132,8 @@ func promptConnectionOrder() {
 
 		res = append(res, value)
 		conns = filterConns(conns, value)
+
+		prompt.Options = conns
 	}
 
 	res = append(res, conns...)
@@ -137,8 +142,16 @@ func promptConnectionOrder() {
 }
 
 func promptSSM() {
+	enabled := GetSSMEnabled()
+
+	message := "Enable Connecting via SSM"
+
+	if enabled {
+		message = "Disable Connecting via SSM"
+	}
+
 	prompt := &survey.Confirm{
-		Message: "Enable Connecting via SSM",
+		Message: message,
 	}
 
 	value := false
@@ -147,12 +160,13 @@ func promptSSM() {
 		log.Fatal(err)
 	}
 
+	if !value {
+		return
+	}
+
 	conns := GetConnectionOrder()
-	if value {
-		if len(conns) == 2 {
-			conns = append(conns, "SSM")
-		}
-	} else {
+
+	if enabled {
 		newConns := []string{}
 
 		for _, conn := range conns {
@@ -162,6 +176,10 @@ func promptSSM() {
 		}
 
 		conns = newConns
+	} else {
+		if len(conns) == 2 {
+			conns = append(conns, "SSM")
+		}
 	}
 
 	viper.Set("SSMEnabled", value)
@@ -200,5 +218,17 @@ func promptTemplate() {
 }
 
 func resetDefaults() {
-	SetDefaults(true)
+	prompt := &survey.Confirm{
+		Message: "Are you sure you'd like to reset to defaults?",
+	}
+
+	value := false
+
+	if err := survey.AskOne(prompt, &value); err != nil {
+		log.Fatal(err)
+	}
+
+	if value {
+		SetDefaults(true)
+	}
 }
