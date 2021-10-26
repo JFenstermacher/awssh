@@ -38,6 +38,27 @@ func GetConfigPath() *ConfigPath {
 	}
 }
 
+func SetDefaults(reset bool) {
+	home := viper.GetString("HOME")
+
+	defaults := map[string]interface{}{
+		"BaseFlags":       "",
+		"ConnectionOrder": []string{"PUBLIC", "PRIVATE"},
+		"DefaultUser":     "ec2-user",
+		"KeysDirectory":   filepath.Join(home, ".ssh"),
+		"SSMEnabled":      false,
+		"TemplateString":  "{{ .Tags.Name }} [{{ .InstanceId }}]",
+	}
+
+	for key, value := range defaults {
+		viper.SetDefault(key, value)
+
+		if reset {
+			viper.Set(key, value)
+		}
+	}
+}
+
 func LoadConfig() {
 	configpath := GetConfigPath()
 
@@ -47,19 +68,12 @@ func LoadConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	home := viper.GetString("home")
-
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	} else {
-		viper.SetDefault("BaseFlags", "")
-		viper.SetDefault("ConnectionOrder", []string{"PUBLIC", "PRIVATE"})
-		viper.SetDefault("DefaultUser", "ec2-user")
-		viper.SetDefault("KeysDirectory", filepath.Join(home, ".ssh"))
-		viper.SetDefault("SSMEnabled", false)
-		viper.SetDefault("TemplateString", "{{ .Tags.Name }} [{{ .InstanceId }}]")
 	}
+
+	SetDefaults(false)
 }
 
 func WriteConfig() {

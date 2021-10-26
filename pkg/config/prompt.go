@@ -1,7 +1,10 @@
 package config
 
 import (
+	"errors"
 	"log"
+
+	"text/template"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/viper"
@@ -24,6 +27,8 @@ func PromptChoice() {
 		"Configure SSH Keys Directory": promptKeysDirectory,
 		"Configure Connection Order":   promptConnectionOrder,
 		"Configure SSM Proxying":       promptSSM,
+		"Configure Template String":    promptTemplate,
+		"Reset Defaults":               resetDefaults,
 	}
 
 	options := getPromptKeys(choices)
@@ -164,5 +169,36 @@ func promptSSM() {
 }
 
 func promptTemplate() {
+	prompt := &survey.Input{
+		Message: "Provide Instance Rendering Template",
+		Default: GetTemplateString(),
+	}
 
+	templateString := ""
+
+	validator := func(value interface{}) error {
+		str, ok := value.(string)
+
+		if !ok {
+			return errors.New("Not valid string")
+		}
+
+		_, err := template.New("instance").Parse(str)
+
+		if err != nil {
+			return errors.New("Template string provided can't be rendered")
+		}
+
+		return nil
+	}
+
+	if err := survey.AskOne(prompt, &templateString, survey.WithValidator(validator)); err != nil {
+		log.Fatal(err)
+	}
+
+	viper.Set("TemplateString", templateString)
+}
+
+func resetDefaults() {
+	SetDefaults(true)
 }
