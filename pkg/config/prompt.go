@@ -20,7 +20,7 @@ func getPromptKeys(m map[string]func()) []string {
 	return keys
 }
 
-func PromptChoice() {
+func Prompt() {
 	choices := map[string]func(){
 		"Base Command Flags": promptBaseFlags,
 		"Default EC2 User":   promptDefaultUser,

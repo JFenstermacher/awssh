@@ -10,6 +10,7 @@ import (
 	"github.com/JFenstermacher/awssh/pkg/config"
 	inst "github.com/JFenstermacher/awssh/pkg/instances"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/fatih/color"
 	"github.com/spf13/pflag"
 )
 
@@ -84,6 +85,10 @@ func getInstanceLabels(instances *[]inst.Instance, templateString string) ([]str
 		}
 
 		key := label.String()
+
+		if instance.State != "running" {
+			key = color.RedString(key)
+		}
 
 		labels = append(labels, key)
 		mapping[key] = instance
